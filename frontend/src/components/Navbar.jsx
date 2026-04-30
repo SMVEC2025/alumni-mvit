@@ -186,7 +186,7 @@ function Navbar() {
         <div className="containerr navbar-inner">
           <Link to="/" className="navbar-logo">
             <img
-              src={scrolled && !isLoginPage ? '/img/logo/light.svg' : '/img/logo/dark.svg'}
+              src={scrolled && !isLoginPage ? '/img/logo/logo.png' : '/img/logo/logo.png'}
               alt="MVIT Alumni"
               className="navbar-logo-img"
             />

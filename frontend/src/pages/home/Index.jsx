@@ -1,4 +1,5 @@
 import Hero from './components/Hero'
+import AlumniCell from './components/AlumniCell'
 import FounderQuote from './components/FounderQuote'
 import NotableAlumni from './components/NotableAlumni'
 import EventsHighlight from './components/EventsHighlight'
@@ -10,6 +11,7 @@ function Home() {
     <div className="home-main page-content">
       <Preloader/>
       <Hero />
+      <AlumniCell />
       <FounderQuote />
       <NotableAlumni />
       <EventsHighlight />
