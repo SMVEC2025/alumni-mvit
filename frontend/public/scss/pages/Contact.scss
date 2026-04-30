@@ -1,0 +1,129 @@
+.contact-page {
+  .contact-hero {
+    background: linear-gradient(135deg, $secondary-color, darken($secondary-color, 12%));
+    padding: 100px 0 40px;
+    text-align: center;
+    color: $text-white;
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 1rem;
+      opacity: 0.85;
+    }
+  }
+
+  .contact-content {
+    padding: 60px 0;
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+    }
+  }
+
+  .contact-form-wrapper {
+    h2 {
+      font-size: 1.5rem;
+      color: $text-dark;
+      margin-bottom: 6px;
+    }
+
+    > p {
+      color: $text-light;
+      font-size: 0.92rem;
+      margin-bottom: 24px;
+    }
+
+    .contact-form {
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+
+        @media (max-width: 500px) {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .btn {
+        min-width: 160px;
+      }
+    }
+  }
+
+  .contact-info {
+    h2 {
+      font-size: 1.5rem;
+      color: $text-dark;
+      margin-bottom: 6px;
+    }
+
+    > p {
+      color: $text-light;
+      font-size: 0.92rem;
+      margin-bottom: 30px;
+    }
+
+    .info-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-card {
+      display: flex;
+      gap: 16px;
+      padding: 20px;
+      box-shadow: none;
+
+      .info-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba($secondary-color, 0.1);
+        border-radius: $radius;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $secondary-color;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+      }
+
+      .info-text {
+        h4 {
+          font-size: 0.95rem;
+          color: $text-dark;
+          margin-bottom: 4px;
+        }
+
+        p {
+          font-size: 0.88rem;
+          color: $text-light;
+          line-height: 1.5;
+        }
+      }
+    }
+
+    .contact-map {
+      margin-top: 20px;
+      height: 200px;
+      background: $bg-light;
+      border-radius: $radius;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-light;
+      font-size: 0.9rem;
+    }
+  }
+}

@@ -1,0 +1,93 @@
+import { Link } from 'react-router-dom'
+import { HiLogout, HiUserCircle, HiX } from 'react-icons/hi'
+
+function MobileSidebarMenu({
+  open,
+  onClose,
+  user,
+  profileImageUrl,
+  profileDisplayName,
+  isStaff,
+  navLinks,
+  isActive,
+  onLogout,
+  loggingOut = false,
+  profilePath = '/alumni-space',
+  logoSrc = '/img/logo/dark.svg',
+}) {
+  return (
+    <>
+      <div
+        className={`sidebar-overlay${open ? ' active' : ''}`}
+        onClick={onClose}
+      />
+
+      <aside
+        id="mobile-sidebar-menu"
+        className={`sidebar-mobile${open ? ' open' : ''}`}
+        aria-hidden={!open}
+      >
+        <div className="sidebar-mobile__header">
+          <Link to="/" className="sidebar-mobile__logo" onClick={onClose}>
+            <img src={logoSrc} alt="MVIT Alumni" />
+          </Link>
+          <button className="sidebar-mobile__close" onClick={onClose} aria-label="Close menu">
+            <HiX />
+          </button>
+        </div>
+
+        {user && (
+          <Link to={profilePath} className="sidebar-mobile__profile" onClick={onClose}>
+            <div className="sidebar-mobile__avatar">
+              {profileImageUrl ? (
+                <img src={profileImageUrl} alt="Profile" />
+              ) : (
+                <HiUserCircle />
+              )}
+            </div>
+            <div className="sidebar-mobile__profile-info">
+              {/* <span className="sidebar-mobile__profile-name">{profileDisplayName}</span> */}
+              <span className="sidebar-mobile__profile-role">{isStaff ? 'Staff' : 'Alumni'}</span>
+            </div>
+          </Link>
+        )}
+
+        <nav className="sidebar-mobile__nav">
+          <ul>
+            {navLinks.map((link) => (
+              <li key={link.path}>
+                <Link
+                  to={link.path}
+                  className={`sidebar-mobile__link${isActive(link.path) ? ' active' : ''}`}
+                  onClick={onClose}
+                >
+                  <span className="sidebar-mobile__link-icon">{link.icon}</span>
+                  <span className="sidebar-mobile__link-label">{link.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="sidebar-mobile__footer">
+          {user ? (
+            <button
+              className="sidebar-mobile__logout"
+              onClick={onLogout}
+              disabled={loggingOut}
+            >
+              <HiLogout />
+              <span>{loggingOut ? 'Logging out...' : 'Logout'}</span>
+            </button>
+          ) : (
+            <Link to="/login" className="sidebar-mobile__login" onClick={onClose}>
+              Login
+            </Link>
+          )}
+        </div>
+      </aside>
+    </>
+  )
+}
+
+export default MobileSidebarMenu
