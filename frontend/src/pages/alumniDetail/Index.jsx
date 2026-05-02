@@ -383,8 +383,7 @@ function AlumniDetail() {
     const getFullName = () => [alumni.first_name, alumni.last_name].filter(Boolean).join(' ') || 'Unknown'
     const getInitials = (person = alumni) => {
         const first = (person.first_name ?? '').charAt(0).toUpperCase()
-        const last = (person.last_name ?? '').charAt(0).toUpperCase()
-        return first + last || '?'
+        return first || '?'
     }
     const getFullNameOf = (person) => [person.first_name, person.last_name].filter(Boolean).join(' ') || 'Unknown'
 

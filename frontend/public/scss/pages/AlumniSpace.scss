@@ -46,9 +46,10 @@
 
   // ── Sidebar ──────────────────────────────────────────────
   .alumni-space-sidebar {
-    background: #fbfcf7;
-    border-radius: 16px;
-    border: 1px solid rgba(128, 128, 128, 0.149);
+    background: #fffefb;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
     overflow: hidden;
     height: fit-content;
     position: sticky;
@@ -65,33 +66,46 @@
 
     // Top gradient banner (profile area)
     .sidebar-profile-banner {
-      background: linear-gradient(160deg, #37419a 0%, darken(#37419a, 14%) 100%);
-      padding: 32px 24px 20px;
+      background: linear-gradient(180deg, #0a5e6d 0%, #07515f 100%);
+      padding: 30px 24px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
     .profile-avatar {
-      width: 96px;
-      height: 96px;
+      width: 108px;
+      height: 108px;
       border-radius: 50%;
-      border: 3px solid $primary-color;
-      outline: 3px solid rgba(255, 255, 255, 0.25);
-      background: #edf1ff;
-      color: $secondary-color;
+      border: 3px solid rgba(255, 255, 255, 0.28);
+      outline: 2px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 4rem;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
       flex-shrink: 0;
 
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+      }
+
+      .profile-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-family: 'Futura PT', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
       }
     }
 
@@ -123,20 +137,20 @@
 
     .profile-avatar-edit {
       position: absolute;
-      right: -4px;
-      bottom: -2px;
-      width: 30px;
-      height: 30px;
+      right: 2px;
+      bottom: 4px;
+      width: 32px;
+      height: 32px;
       padding: 0;
       border-radius: 50%;
       border: 2px solid #fff;
-      background: $primary-color;
-      color: #1f2a55;
+      background: #ffffff;
+      color: #054d5a;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 0.92rem;
-      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.18);
       z-index: 2;
       cursor: pointer;
 
@@ -147,46 +161,46 @@
 
     .profile-avatar-hint {
       margin: 8px 0 0;
-      color: rgba(255, 255, 255, 0.78);
+      color: rgba(255, 255, 255, 0.82);
       font-size: 0.72rem;
       font-family: 'Futura PT', sans-serif;
       letter-spacing: 0.03em;
     }
 
     .sidebar-name {
-      margin: 14px 0 4px;
+      margin: 16px 0 4px;
       color: #fff;
       font-family: 'Futura PT', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 600;
+      font-size: 1.12rem;
+      font-weight: 700;
       text-align: center;
       letter-spacing: 0.01em;
     }
 
     .sidebar-email {
       margin: 0;
-      color: rgba(255, 255, 255, 0.65);
-      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.8rem;
       font-family: 'Futura PT', sans-serif;
       text-align: center;
       word-break: break-word;
     }
 
     .sidebar-badge {
-      margin-top: 12px;
+      margin-top: 14px;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      background: rgba($primary-color, 0.18);
-      border: 1px solid rgba($primary-color, 0.45);
-      color: $primary-color;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #fff;
       font-family: 'Futura PT', sans-serif;
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 20px;
+      padding: 6px 12px;
+      border-radius: 999px;
 
       svg {
         flex-shrink: 0;
@@ -195,13 +209,13 @@
       &--disabled {
         background: rgba(#ef4444, 0.18);
         border-color: rgba(#ef4444, 0.45);
-        color: #ef4444;
+        color: #ffe1e1;
       }
     }
 
     // Navigation section
     .sidebar-nav-label {
-      padding: 18px 20px 6px;
+      padding: 20px 20px 8px;
       font-family: 'Futura PT', sans-serif;
       font-size: 0.65rem;
       font-weight: 600;
@@ -211,20 +225,20 @@
     }
 
     .sidebar-sections {
-      padding: 0 12px 16px;
+      padding: 0 14px 16px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
 
       button {
         border: none;
         background: transparent;
-        padding: 11px 14px;
-        border-radius: 10px;
+        padding: 12px 14px 12px 16px;
+        border-radius: 12px;
         text-align: left;
-        color: #555;
+        color: #50545d;
         font-family: 'Futura PT', sans-serif;
-        font-size: 0.9rem;
+        font-size: 0.92rem;
         font-weight: 500;
         cursor: pointer;
         transition: $transition;
@@ -237,8 +251,8 @@
           content: '';
           width: 3px;
           height: 0;
-          background: $primary-color;
-          border-radius: 2px;
+          background: #054d5a;
+          border-radius: 999px;
           position: absolute;
           left: 0;
           top: 50%;
@@ -254,25 +268,26 @@
         }
 
         &:hover {
-          background: #f7f6f2;
+          background: rgba(#054d5a, 0.05);
           color: $text-dark;
 
           svg {
-            color: $secondary-color;
+            color: #054d5a;
           }
         }
 
         &.active {
-          background: rgba($primary-color, 0.08);
-          color: darken($primary-color, 8%);
+          background: #eef5f4;
+          color: #054d5a;
           font-weight: 600;
+          box-shadow: inset 0 0 0 1px rgba(#054d5a, 0.04);
 
           &::before {
-            height: 60%;
+            height: 68%;
           }
 
           svg {
-            color: $primary-color;
+            color: #054d5a;
           }
         }
       }
@@ -650,13 +665,13 @@
         padding: 11px 28px;
         border-radius: 8px;
         border: none;
-        background: $primary-color;
+        background: #054d5a;
         color: #fff;
         cursor: pointer;
         transition: background 0.2s ease, transform 0.15s ease;
 
         &:hover:not(:disabled) {
-          background: darken($primary-color, 8%);
+          background: #066473;
           transform: translateY(-1px);
         }
 
@@ -777,7 +792,7 @@
 .apv-avatar-fallback {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, lighten($primary-color, 10%), $primary-color);
+  background: linear-gradient(150deg, #054d5a 0%, #066473 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -927,11 +942,11 @@
 }
 
 .apv-btn-primary {
-  background: $primary-color;
+  background: #054d5a;
   color: #fff;
 
   &:hover {
-    background: darken($primary-color, 8%);
+    background: #066473;
   }
 }
 
@@ -978,7 +993,7 @@
   color: $text-dark;
 
   svg {
-    color: $primary-color;
+    color: #054d5a;
     font-size: 1.15rem;
   }
 }
@@ -1049,8 +1064,8 @@
 }
 
 .apv-highlight-icon--experience {
-  background: rgba($primary-color, 0.1);
-  color: darken($primary-color, 10%);
+  background: rgba(#054d5a, 0.1);
+  color: #054d5a;
 }
 
 .apv-highlight-icon--batch {
@@ -1079,7 +1094,7 @@
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
-  color: $primary-color;
+  color: #054d5a;
   flex-shrink: 0;
   border: 1px solid #ece9e2;
 }
@@ -1090,7 +1105,7 @@
 }
 
 .apv-edu-logo {
-  background: linear-gradient(135deg, $secondary-color, lighten($secondary-color, 12%));
+  background: linear-gradient(135deg, #043c47, lighten(#043c47, 12%));
   color: #fff;
   border: none;
 }
@@ -1131,7 +1146,7 @@
 .apv-inline-link {
   background: none;
   border: none;
-  color: $primary-color;
+  color: #054d5a;
   font-family: 'Futura PT', sans-serif;
   font-size: 0.9rem;
   font-weight: 600;

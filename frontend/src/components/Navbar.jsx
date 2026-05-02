@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { HiMenu, HiX, HiUserCircle, HiHome, HiUsers, HiClipboardList, HiMail, HiSearch } from 'react-icons/hi'
+import { HiMenu, HiX, HiHome, HiUsers, HiClipboardList, HiMail, HiSearch, HiUserCircle } from 'react-icons/hi'
 import { getUser, onAuthChange, logout as authLogout } from '../lib/auth'
 import { isStudentRegistered } from '../lib/studentRegistration'
 import { getSupabaseWithSession } from '../lib/supabaseClient'
@@ -25,6 +25,10 @@ function getCachedRegistrationStatus(userId) {
 function setCachedRegistrationStatus(userId, registered) {
   if (!userId) return
   safeLocalStorageSet(`${REG_STATUS_CACHE_PREFIX}${userId}`, registered ? '1' : '0')
+}
+
+function hasReadableName(value) {
+  return /[a-zA-Z]/.test(String(value || ''))
 }
 
 function UserProfileDropdown({
@@ -76,7 +80,7 @@ function UserProfileDropdown({
         {profileImageUrl ? (
           <img src={profileImageUrl} alt="Profile" />
         ) : (
-          <HiUserCircle />
+          <span>{profileName?.charAt(0)?.toUpperCase() || 'A'}</span>
         )}
       </button>
 
@@ -157,13 +161,18 @@ function Navbar({
     ? location.pathname.startsWith('/directory')
     : location.pathname === path
   const isLoginPage = location.pathname === '/login'
+  const usesSolidNavbar =
+    location.pathname === '/settings-privacy' ||
+    location.pathname.startsWith('/alumni-space') ||
+    location.pathname === '/contact'
 
   const isStaff = user?.role === 'staff'
   const profilePath = isStaff ? '/directory' : '/alumni-space'
-  const profileName = [
+  const resolvedProfileName = [
     profileInfo?.first_name,
     profileInfo?.last_name,
-  ].filter(Boolean).join(' ') || user?.name || user?.mobile_number || 'Alumni SMVEC'
+  ].filter(Boolean).join(' ')
+  const profileName = resolvedProfileName || (hasReadableName(user?.name) ? user.name : 'Alumni SMVEC')
   const batchLabel = profileInfo?.year_of_completion
     ? `Batch ${profileInfo.year_of_completion}`
     : 'Batch not added'
@@ -396,6 +405,7 @@ function Navbar({
           user={user}
           profileImageUrl={resolvedProfileImageUrl}
           isStaff={isStaff}
+          profileName={profileName}
           navLinks={navLinks}
           isActive={isActive}
           onLogout={handleLogout}
@@ -409,7 +419,7 @@ function Navbar({
 
   return (
     <>
-      <nav className={`navbar${scrolled && !isLoginPage ? ' navbar--scrolled' : ''}${isLoginPage ? ' navbar--login' : ''}${navHidden ? ' navbar--hidden' : ''}`}>
+      <nav className={`navbar${(scrolled || usesSolidNavbar) && !isLoginPage ? ' navbar--scrolled' : ''}${isLoginPage ? ' navbar--login' : ''}${navHidden ? ' navbar--hidden' : ''}`}>
         <div className="containerr navbar-inner">
           <Link to="/" className="navbar-logo">
             <img
@@ -472,6 +482,7 @@ function Navbar({
         user={user}
         profileImageUrl={resolvedProfileImageUrl}
         isStaff={isStaff}
+        profileName={profileName}
         navLinks={navLinks}
         isActive={isActive}
         onLogout={handleLogout}

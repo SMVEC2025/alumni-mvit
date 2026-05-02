@@ -1,24 +1,33 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   HiShieldCheck,
-  HiDownload,
   HiSupport,
   HiEye,
   HiKey,
   HiLogout,
   HiClock,
   HiMail,
-  HiDocumentText,
   HiExclamationCircle,
   HiDesktopComputer,
   HiDeviceMobile,
+  HiPhone,
+  HiLockClosed,
+  HiUpload,
+  HiTrash,
+  HiUser,
 } from 'react-icons/hi'
 import { useSnackbar } from 'notistack'
 import { changePassword, listSessions, logout, logoutAllDevices, revokeSession, verifySession } from '../../lib/auth'
 import { getSupabaseWithSession, isSupabaseConfigured, supabase } from '../../lib/supabaseClient'
+import { useProtectedImageUrl } from '../../hooks/useProtectedImageUrl'
+import { uploadAlumniImage } from '../../lib/imageUpload'
 
-const ALUMNI_CELL_EMAIL = 'alumni@smvec.ac.in'
+const MAX_PROFILE_IMAGE_SIZE = 3 * 1024 * 1024
+
+const ALUMNI_CELL_EMAIL = 'alumnicoordinator@smvec.ac.in'
+
+const SETTINGS_SECTIONS = ['profile-photo', 'profile-visibility', 'account-security', 'help-support']
 
 function SettingsPrivacy() {
   const navigate = useNavigate()
@@ -29,6 +38,9 @@ function SettingsPrivacy() {
   const [saving, setSaving] = useState(false)
   const [sessionsLoading, setSessionsLoading] = useState(true)
   const [sessions, setSessions] = useState([])
+  const [activeSection, setActiveSection] = useState('profile-photo')
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const profileImageInputRef = useRef(null)
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -46,7 +58,10 @@ function SettingsPrivacy() {
   const showEmail = profile?.show_email !== false
   const currentSession = sessions.find((session) => session.is_current) || null
   const otherSessions = sessions.filter((session) => !session.is_current)
-
+  const requiresCurrentPassword = Boolean(user?.has_password)
+  const accountInitial = profileName.trim().charAt(0).toUpperCase() || 'A'
+  const resolvedAvatarUrl = useProtectedImageUrl(profile?.profile_image_url || '')
+  const mobileLabel = user?.mobile_number ? `+91 ${user.mobile_number}` : 'Mobile not available'
   useEffect(() => {
     let mounted = true
 
@@ -89,6 +104,28 @@ function SettingsPrivacy() {
     load()
     return () => { mounted = false }
   }, [enqueueSnackbar, navigate])
+
+  useEffect(() => {
+    if (loading) return undefined
+
+    const elements = SETTINGS_SECTIONS
+      .map((id) => document.getElementById(id))
+      .filter(Boolean)
+    if (elements.length === 0) return undefined
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        if (visible?.target?.id) setActiveSection(visible.target.id)
+      },
+      { rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+    )
+
+    elements.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [loading])
 
   useEffect(() => {
     let mounted = true
@@ -150,6 +187,10 @@ function SettingsPrivacy() {
       enqueueSnackbar('New password must be at least 8 characters.', { variant: 'error' })
       return
     }
+    if (requiresCurrentPassword && !passwordForm.currentPassword) {
+      enqueueSnackbar('Enter your current password to set a new one.', { variant: 'error' })
+      return
+    }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       enqueueSnackbar('Passwords do not match.', { variant: 'error' })
       return
@@ -157,8 +198,12 @@ function SettingsPrivacy() {
 
     setSaving(true)
     try {
-      await changePassword(passwordForm.currentPassword, passwordForm.newPassword)
+      const data = await changePassword(
+        requiresCurrentPassword ? passwordForm.currentPassword : '',
+        passwordForm.newPassword,
+      )
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setUser((prev) => data?.user || (prev ? { ...prev, has_password: true } : prev))
       enqueueSnackbar('Password updated successfully.', { variant: 'success' })
     } catch (error) {
       enqueueSnackbar(error.message || 'Unable to update password.', { variant: 'error' })
@@ -201,21 +246,74 @@ function SettingsPrivacy() {
     }
   }
 
-  const downloadProfileData = () => {
-    const payload = {
-      exported_at: new Date().toISOString(),
-      user,
-      alumni_profile: profile,
+  const handleProfileImageButtonClick = () => {
+    profileImageInputRef.current?.click()
+  }
+
+  const handleProfileImageChange = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      enqueueSnackbar('Please upload a valid image file.', { variant: 'error' })
+      return
     }
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `mvit-alumni-profile-${profile?.id || user?.id || 'data'}.json`
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    if (file.size > MAX_PROFILE_IMAGE_SIZE) {
+      enqueueSnackbar('Profile image must be 3MB or less.', { variant: 'error' })
+      return
+    }
+
+    const sessionSupabase = getSupabaseWithSession()
+    if (!profile?.id || !sessionSupabase) {
+      enqueueSnackbar('Unable to update profile photo right now.', { variant: 'error' })
+      return
+    }
+
+    setUploadingPhoto(true)
+    try {
+      const uploadResult = await uploadAlumniImage(file, 'profile')
+      const persistedUrl = uploadResult?.publicUrl
+      if (!persistedUrl) throw new Error('Could not resolve uploaded image URL.')
+
+      const { error } = await sessionSupabase
+        .from('alumni_registrations')
+        .update({ profile_image_url: persistedUrl, updated_at: new Date().toISOString() })
+        .eq('id', profile.id)
+      if (error) throw error
+
+      setProfile((prev) => (prev ? { ...prev, profile_image_url: persistedUrl } : prev))
+      enqueueSnackbar('Profile photo updated.', { variant: 'success' })
+    } catch (err) {
+      enqueueSnackbar(err.message || 'Could not update profile photo.', { variant: 'error' })
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const handleProfileImageRemove = async () => {
+    const sessionSupabase = getSupabaseWithSession()
+    if (!profile?.id || !sessionSupabase) {
+      enqueueSnackbar('Unable to remove profile photo right now.', { variant: 'error' })
+      return
+    }
+    if (!profile.profile_image_url) return
+
+    setUploadingPhoto(true)
+    try {
+      const { error } = await sessionSupabase
+        .from('alumni_registrations')
+        .update({ profile_image_url: null, updated_at: new Date().toISOString() })
+        .eq('id', profile.id)
+      if (error) throw error
+
+      setProfile((prev) => (prev ? { ...prev, profile_image_url: null } : prev))
+      enqueueSnackbar('Profile photo removed.', { variant: 'success' })
+    } catch (err) {
+      enqueueSnackbar(err.message || 'Could not remove profile photo.', { variant: 'error' })
+    } finally {
+      setUploadingPhoto(false)
+    }
   }
 
   const supportMail = (subject, body) => {
@@ -239,18 +337,103 @@ function SettingsPrivacy() {
   return (
     <div className="settings-page page-content">
       <div className="settings-shell">
-        <div className="settings-grid">
+        <div className="settings-workspace">
           <aside className="settings-sidebar">
-            <a href="#profile-visibility"><HiEye /> Profile Visibility</a>
-            <a href="#account-security"><HiShieldCheck /> Account Security</a>
-            <a href="#data-profile"><HiDownload /> Data & Profile</a>
-            <a href="#help-support"><HiSupport /> Help & Support</a>
+            <div className="settings-sidebar-head">
+              <div className="settings-avatar" aria-hidden="true">
+                {resolvedAvatarUrl ? (
+                  <img src={resolvedAvatarUrl} alt="" />
+                ) : (
+                  <span>{accountInitial}</span>
+                )}
+              </div>
+              <div className="settings-sidebar-identity">
+                <strong>{profileName}</strong>
+                <small>{user?.role === 'staff' ? 'Staff account' : 'Alumni account'}</small>
+              </div>
+            </div>
+            <nav className="settings-sidebar-nav" aria-label="Settings sections">
+              <a href="#profile-photo" className={activeSection === 'profile-photo' ? 'is-active' : undefined}><HiUser /> Profile</a>
+              <a href="#profile-visibility" className={activeSection === 'profile-visibility' ? 'is-active' : undefined}><HiEye /> Privacy</a>
+              <a href="#account-security" className={activeSection === 'account-security' ? 'is-active' : undefined}><HiShieldCheck /> Security</a>
+              <a href="#help-support" className={activeSection === 'help-support' ? 'is-active' : undefined}><HiSupport /> Support</a>
+            </nav>
+            <div className="settings-sidebar-meta">
+              <span><HiPhone /> {mobileLabel}</span>
+              <span><HiLockClosed /> {requiresCurrentPassword ? 'Password protected' : 'OTP login enabled'}</span>
+            </div>
           </aside>
 
           <main className="settings-main">
+            <div className="settings-main-head">
+              <div>
+                <h1>Settings</h1>
+                <p>Manage privacy, password access, devices, and alumni support.</p>
+              </div>
+              {saving && (
+                <span className="settings-saving" role="status" aria-live="polite">
+                  Saving changes
+                </span>
+              )}
+            </div>
+
+            <section id="profile-photo" className="settings-panel">
+              <div className="settings-panel-heading">
+                <div>
+                  <h2>Profile Picture</h2>
+                  <p>This photo appears on your alumni profile and directory listing.</p>
+                </div>
+              </div>
+
+              {!hasProfile && user?.role !== 'staff' ? (
+                <div className="settings-note">
+                  Complete alumni registration to upload a profile photo.
+                </div>
+              ) : (
+                <div className="settings-photo-row">
+                  <div className="settings-photo-preview" aria-hidden="true">
+                    {resolvedAvatarUrl ? (
+                      <img src={resolvedAvatarUrl} alt="" />
+                    ) : (
+                      <span>{accountInitial}</span>
+                    )}
+                  </div>
+                  <div className="settings-photo-actions">
+                    <div className="settings-photo-buttons">
+                      <button
+                        type="button"
+                        className="settings-btn settings-btn--primary"
+                        onClick={handleProfileImageButtonClick}
+                        disabled={uploadingPhoto || !hasProfile}
+                      >
+                        <HiUpload /> {uploadingPhoto ? 'Uploading…' : 'Upload Image'}
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-btn settings-btn--ghost"
+                        onClick={handleProfileImageRemove}
+                        disabled={uploadingPhoto || !profile?.profile_image_url}
+                      >
+                        <HiTrash /> Remove
+                      </button>
+                    </div>
+                    <small className="settings-photo-hint">
+                      We support PNGs, JPEGs and GIFs under 3MB.
+                    </small>
+                  </div>
+                  <input
+                    ref={profileImageInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={handleProfileImageChange}
+                  />
+                </div>
+              )}
+            </section>
+
             <section id="profile-visibility" className="settings-panel">
               <div className="settings-panel-heading">
-                <span><HiEye /></span>
                 <div>
                   <h2>Profile Visibility</h2>
                   <p>Choose what contact information appears to registered alumni and staff.</p>
@@ -281,23 +464,28 @@ function SettingsPrivacy() {
 
             <section id="account-security" className="settings-panel">
               <div className="settings-panel-heading">
-                <span><HiShieldCheck /></span>
                 <div>
                   <h2>Account Security</h2>
                   <p>Update your password and control active sessions.</p>
                 </div>
               </div>
 
-              <form className="settings-password-form" onSubmit={handlePasswordSubmit}>
-                <label>
-                  <span>Current password</span>
-                  <input
-                    type="password"
-                    value={passwordForm.currentPassword}
-                    onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
-                    placeholder={user?.has_password ? 'Enter current password' : 'Optional if password was not set'}
-                  />
-                </label>
+              <form
+                className={`settings-password-form${requiresCurrentPassword ? '' : ' settings-password-form--new-only'}`}
+                onSubmit={handlePasswordSubmit}
+              >
+                {requiresCurrentPassword && (
+                  <label>
+                    <span>Current password</span>
+                    <input
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                      placeholder="Enter current password"
+                      autoComplete="current-password"
+                    />
+                  </label>
+                )}
                 <label>
                   <span>New password</span>
                   <input
@@ -305,6 +493,7 @@ function SettingsPrivacy() {
                     value={passwordForm.newPassword}
                     onChange={(event) => setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))}
                     placeholder="Minimum 8 characters"
+                    autoComplete="new-password"
                   />
                 </label>
                 <label>
@@ -314,6 +503,7 @@ function SettingsPrivacy() {
                     value={passwordForm.confirmPassword}
                     onChange={(event) => setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
                     placeholder="Re-enter new password"
+                    autoComplete="new-password"
                   />
                 </label>
                 <button type="submit" disabled={saving}>
@@ -385,39 +575,8 @@ function SettingsPrivacy() {
               </div>
             </section>
 
-            <section id="data-profile" className="settings-panel">
-              <div className="settings-panel-heading">
-                <span><HiDownload /></span>
-                <div>
-                  <h2>Data & Profile</h2>
-                  <p>Export your profile data or ask the alumni cell to correct official details.</p>
-                </div>
-              </div>
-
-              <div className="settings-action-list">
-                <button type="button" onClick={downloadProfileData} disabled={!user}>
-                  <HiDownload />
-                  <span>
-                    <strong>Download my profile data</strong>
-                    <small>Export account and alumni profile data as JSON.</small>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => supportMail('Profile correction request', 'Please review and correct the following profile details:')}
-                >
-                  <HiDocumentText />
-                  <span>
-                    <strong>Request profile correction</strong>
-                    <small>Send a pre-filled request to the alumni cell.</small>
-                  </span>
-                </button>
-              </div>
-            </section>
-
             <section id="help-support" className="settings-panel">
               <div className="settings-panel-heading">
-                <span><HiSupport /></span>
                 <div>
                   <h2>Help & Support</h2>
                   <p>Get help with incorrect records, official contact, and policy documents.</p>
@@ -467,7 +626,7 @@ function SettingsPrivacy() {
 function SettingToggle({ title, description, checked, disabled, onChange }) {
   return (
     <div className="settings-toggle-row">
-      <div>
+      <div className="settings-toggle-copy">
         <strong>{title}</strong>
         <span>{description}</span>
       </div>
@@ -488,7 +647,6 @@ function SessionCard({ session, isCurrent = false, disabled, onLogout }) {
   const isMobile = /iphone|ipad|android/i.test(String(session?.platform || ''))
   const Icon = isMobile ? HiDeviceMobile : HiDesktopComputer
   const lastSeenLabel = formatSessionTime(session?.last_seen_at || session?.created_at)
-  const createdLabel = formatSessionTime(session?.created_at)
 
   return (
     <div className={`settings-session-card${isCurrent ? ' is-current' : ''}`}>
@@ -500,9 +658,7 @@ function SessionCard({ session, isCurrent = false, disabled, onLogout }) {
           <strong>{session?.device_name || 'Unknown device'}</strong>
           {isCurrent && <span>Current device</span>}
         </div>
-        <small>{session?.browser || 'Browser'} · {session?.platform || 'Device'}</small>
         <small>Last active {lastSeenLabel}</small>
-        <small>Signed in {createdLabel}</small>
       </div>
       <button type="button" onClick={onLogout} disabled={disabled}>
         Logout

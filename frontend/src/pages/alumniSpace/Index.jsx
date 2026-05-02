@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  HiBell, HiUserCircle, HiCheckCircle, HiExclamationCircle, HiUser, HiAcademicCap,
+  HiBell, HiCheckCircle, HiExclamationCircle, HiUser, HiAcademicCap,
   HiLocationMarker, HiPlus, HiTrash, HiArrowRight, HiPencil,
   HiBriefcase, HiGlobe, HiCalendar, HiCamera,
   HiOutlineOfficeBuilding, HiExternalLink, HiUserGroup
@@ -535,8 +535,7 @@ function AlumniSpace() {
   const getFullName = () => `${form.firstName} ${form.lastName}`.trim() || 'Alumni User'
   const getInitials = (person) => {
     const first = ((person?.first_name ?? person?.firstName ?? form.firstName) || '').charAt(0).toUpperCase()
-    const last = ((person?.last_name ?? person?.lastName ?? form.lastName) || '').charAt(0).toUpperCase()
-    return first + last || '?'
+    return first || '?'
   }
 
   const getLocation = () => {
@@ -589,7 +588,7 @@ function AlumniSpace() {
                 {(profileImagePreview || resolvedProfileImageUrl) ? (
                   <img src={profileImagePreview || resolvedProfileImageUrl} alt="Profile" />
                 ) : (
-                  <HiUserCircle />
+                  <span className="profile-avatar-fallback">{getInitials()}</span>
                 )}
               </button>
               <button
@@ -611,7 +610,6 @@ function AlumniSpace() {
             <h3 className="sidebar-name">
               {getFullName()}
             </h3>
-            <p className="profile-avatar-hint">Tap photo to update</p>
             <p className="sidebar-email">{form.email}</p>
             <span className={`sidebar-badge${isDisabled ? ' sidebar-badge--disabled' : ''}`}>
               {isDisabled ? <HiExclamationCircle size={10} /> : <HiCheckCircle size={10} />}

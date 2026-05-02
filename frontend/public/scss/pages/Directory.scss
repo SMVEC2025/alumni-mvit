@@ -792,8 +792,8 @@
   --dir-cover-start: #fafbfc;
   --dir-cover-end: #f1f4f8;
   --dir-cover-glow: rgba(255, 255, 255, 0.92);
-  --dir-avatar-start: #2646a3;
-  --dir-avatar-end: #142c78;
+  --dir-avatar-start: #054d5a;
+  --dir-avatar-end: #066473;
   background: $bg-white;
   border: 1px solid $border-color;
   border-radius: $rad-md;
@@ -1009,7 +1009,7 @@
     overflow: hidden;
 
     &--initials {
-      background: linear-gradient(135deg, $secondary-color, lighten($secondary-color, 10%));
+      background: linear-gradient(135deg, #054d5a, #066473);
       color: $text-white;
       font-size: $fs-md;
       font-weight: 700;
@@ -1604,39 +1604,38 @@
   --dir-cover-start: #fafbfc;
   --dir-cover-end: #f1f4f8;
   --dir-cover-glow: rgba(255, 255, 255, 0.92);
-  --dir-avatar-start: #2847a6;
-  --dir-avatar-end: #152d7a;
+  --dir-avatar-start: #054d5a;
+  --dir-avatar-end: #066473;
 }
 
 .dir-grid .dir-person-card:nth-child(5n + 2) {
   --dir-cover-start: #f9fbfd;
   --dir-cover-end: #eef2f6;
   --dir-cover-glow: rgba(255, 255, 255, 0.91);
-  --dir-avatar-start: #23439d;
-  --dir-avatar-end: #12286d;
+  --dir-avatar-start: #054d5a;
+  --dir-avatar-end: #066473;
 }
 
 .dir-grid .dir-person-card:nth-child(5n + 3) {
   --dir-cover-start: #fbfcfd;
   --dir-cover-end: #f3f5f8;
   --dir-cover-glow: rgba(255, 255, 255, 0.94);
-  --dir-avatar-start: #2b4cad;
-  --dir-avatar-end: #193182;
+  --dir-avatar-start: #054d5a;
+  --dir-avatar-end: #066473;
 }
 
 .dir-grid .dir-person-card:nth-child(5n + 4) {
   --dir-cover-start: #f8fafc;
   --dir-cover-end: #edf1f5;
   --dir-cover-glow: rgba(255, 255, 255, 0.9);
-  --dir-avatar-start: #203e97;
-  --dir-avatar-end: #102565;
+  --dir-avatar-start: #054d5a;
+  --dir-avatar-end: #066473;
 }
 
 .dir-grid .dir-person-card:nth-child(5n) {
   --dir-cover-start: #fafbfd;
   --dir-cover-end: #f0f3f7;
   --dir-cover-glow: rgba(255, 255, 255, 0.92);
-  --dir-avatar-start: #2f51b6;
-  --dir-avatar-end: #1a3488;
+  --dir-avatar-start: #054d5a;
+  --dir-avatar-end: #066473;
 }
-

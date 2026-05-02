@@ -104,7 +104,7 @@ function Contact() {
                   <div className="info-icon"><HiMail /></div>
                   <div className="info-text">
                     <h4>Email</h4>
-                    <p>alumni@smvec.ac.in</p>
+                    <p>alumnicoordinator@smvec.ac.in</p>
                   </div>
                 </div>
 

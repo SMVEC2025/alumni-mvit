@@ -213,12 +213,18 @@ export async function changePassword(currentPassword, newPassword) {
   const token = getSessionToken()
   if (!token) throw new Error('Session expired. Please login again.')
 
-  return callEdgeFn({
+  const data = await callEdgeFn({
     action: 'change-password',
     session_token: token,
     current_password: currentPassword,
     new_password: newPassword,
   })
+
+  if (data?.user) {
+    saveSession(token, data.user)
+  }
+
+  return data
 }
 
 export async function logoutAllDevices() {

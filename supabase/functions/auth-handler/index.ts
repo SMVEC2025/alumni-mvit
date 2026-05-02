@@ -266,6 +266,10 @@ serve(async (req: Request) => {
       }
 
       if (hasPassword(user)) {
+        if (!currentPassword) {
+          return jsonError('Current password is required.', 400)
+        }
+
         const isCurrentValid = await verifyPassword(supabase, currentPassword, String(user.password_hash))
         if (!isCurrentValid) {
           return jsonError('Current password is incorrect.', 401)
@@ -273,16 +277,18 @@ serve(async (req: Request) => {
       }
 
       const hash = await hashPassword(supabase, newPassword)
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('users')
         .update({ password_hash: hash })
         .eq('id', user.id)
+        .select('id, mobile_number, role, password_hash')
+        .single()
 
-      if (updateError) {
+      if (updateError || !updated) {
         return jsonError(updateError.message || 'Failed to update password.', 500)
       }
 
-      return jsonOk({ success: true })
+      return jsonOk({ success: true, user: toPublicUser(updated) })
     }
 
     if (action === 'check-user') {

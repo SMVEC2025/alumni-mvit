@@ -51,7 +51,7 @@ function Footer() {
             </div>
             <div className="footer-contact-item">
               <HiMail />
-              <span>alumni@smvec.ac.in</span>
+              <span>alumnicoordinator@smvec.ac.in</span>
             </div>
           </div>
         </div>

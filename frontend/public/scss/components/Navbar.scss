@@ -178,7 +178,7 @@
 
       &:hover,
       &.active {
-        color: $primary-color;
+        color: rgb(255, 194, 82);
       }
     }
   }
@@ -217,12 +217,15 @@
       width: 42px;
       height: 42px;
       border-radius: 999px;
-      background: #ffffff1f;
+      background: linear-gradient(150deg, rgba(#054d5a, 0.96) 0%, rgba(#066473, 0.96) 100%);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       color: #fff;
+      font-family: 'Futura PT', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
       transition: $transition;
       text-decoration: none;
       cursor: pointer;
@@ -233,8 +236,8 @@
         object-fit: cover;
       }
 
-      svg {
-        font-size: 1.6rem;
+      span {
+        line-height: 1;
       }
 
       &:hover {
@@ -248,6 +251,7 @@
       left: 50%;
       top: calc(100% + 6px);
       min-width: 160px;
+      max-width: 220px;
       padding: 3px;
       border-radius: 2px;
       border: 1px solid #d7d5d1;
@@ -380,7 +384,7 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #5d6dc9;
+  background: linear-gradient(150deg, rgba(#054d5a, 0.96) 0%, rgba(#066473, 0.96) 100%);
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -432,9 +436,9 @@
 
 .navbar-profile-view-btn {
   min-height: 40px;
-  border: 1.5px solid #0a66c2;
+  border: 1.5px solid #0d3b6974;
   border-radius: 999px;
-  color: #0a66c2;
+  color: #062d54;
   background: #fff;
   display: inline-flex;
   align-items: center;
@@ -443,7 +447,7 @@
   text-decoration: none;
   font-family: 'Futura PT', sans-serif;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 500;
   width: 100%;
   transition: background 0.16s ease, box-shadow 0.16s ease;
 
@@ -464,7 +468,7 @@
     color: #1f2937;
     font-family: 'Futura PT', sans-serif;
     font-size: 0.98rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   &--last {
@@ -658,13 +662,17 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 1px solid #cdd9f7;
-    background: #ffffff;
+    border: 1px solid rgba($secondary-color, 0.18);
+    background: linear-gradient(150deg, #054d5a 0%, #066473 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
+    color: #fff;
+    font-family: 'Futura PT', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
 
     img {
       width: 100%;
@@ -672,9 +680,8 @@
       object-fit: cover;
     }
 
-    svg {
-      font-size: 1.8rem;
-      color: #56608d;
+    span {
+      line-height: 1;
     }
   }
 

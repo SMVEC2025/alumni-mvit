@@ -928,8 +928,7 @@ function Directory() {
 
   const getInitials = (row) => {
     const f = (row.first_name ?? '').charAt(0).toUpperCase()
-    const l = (row.last_name ?? '').charAt(0).toUpperCase()
-    return f + l || '?'
+    return f || '?'
   }
 
   const getFullName = useCallback(
@@ -1796,5 +1795,4 @@ function SkeletonGrid({ view }) {
 }
 
 export default Directory
-
 

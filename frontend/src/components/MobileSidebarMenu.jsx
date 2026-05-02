@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { HiLogout, HiUserCircle, HiX } from 'react-icons/hi'
+import { HiLogout, HiX } from 'react-icons/hi'
 
 function MobileSidebarMenu({
   open,
@@ -7,6 +7,7 @@ function MobileSidebarMenu({
   user,
   profileImageUrl,
   isStaff,
+  profileName,
   navLinks,
   isActive,
   onLogout,
@@ -41,7 +42,7 @@ function MobileSidebarMenu({
               {profileImageUrl ? (
                 <img src={profileImageUrl} alt="Profile" />
               ) : (
-                <HiUserCircle />
+                <span>{profileName?.charAt(0)?.toUpperCase() || 'A'}</span>
               )}
             </div>
             <div className="sidebar-mobile__profile-info">
