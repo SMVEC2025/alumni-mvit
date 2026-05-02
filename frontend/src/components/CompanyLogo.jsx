@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { getCompanyLogoEntry } from '../lib/companyLogo'
 
 function CompanyLogo({ company, className = '', fallback = null, alt }) {
-  const [loadError, setLoadError] = useState(false)
+  const [failedLogoUrl, setFailedLogoUrl] = useState('')
   const companyEntry = useMemo(() => getCompanyLogoEntry(company), [company])
   const logoUrl = companyEntry?.logoUrl || ''
-
-  useEffect(() => {
-    setLoadError(false)
-  }, [logoUrl])
+  const loadError = failedLogoUrl === logoUrl
 
   if (!logoUrl || loadError) return fallback
 
@@ -20,7 +17,7 @@ function CompanyLogo({ company, className = '', fallback = null, alt }) {
       loading="lazy"
       decoding="async"
       referrerPolicy="no-referrer"
-      onError={() => setLoadError(true)}
+      onError={() => setFailedLogoUrl(logoUrl)}
     />
   )
 }

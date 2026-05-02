@@ -31,7 +31,12 @@ CREATE TABLE IF NOT EXISTS public.sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  expires_at TIMESTAMPTZ NOT NULL
+  expires_at TIMESTAMPTZ NOT NULL,
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  user_agent TEXT,
+  browser TEXT,
+  platform TEXT,
+  device_name TEXT
 );
 
 -- 4) Main alumni profile table.
@@ -44,6 +49,7 @@ CREATE TABLE IF NOT EXISTS public.alumni_registrations (
   last_name TEXT NOT NULL,
   phone VARCHAR(10),
   show_phone BOOLEAN NOT NULL DEFAULT false,
+  show_email BOOLEAN NOT NULL DEFAULT true,
   degree TEXT,
   department TEXT,
   year_of_completion INTEGER,
@@ -84,10 +90,18 @@ ALTER TABLE public.alumni_registrations
   ADD COLUMN IF NOT EXISTS work_experiences JSONB,
   ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
   ADD COLUMN IF NOT EXISTS show_phone BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS show_email BOOLEAN NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS cover_image_url TEXT,
   ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+ALTER TABLE public.sessions
+  ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS user_agent TEXT,
+  ADD COLUMN IF NOT EXISTS browser TEXT,
+  ADD COLUMN IF NOT EXISTS platform TEXT,
+  ADD COLUMN IF NOT EXISTS device_name TEXT;
 
 ALTER TABLE public.alumni_registrations
   DROP CONSTRAINT IF EXISTS fk_alumni_user;

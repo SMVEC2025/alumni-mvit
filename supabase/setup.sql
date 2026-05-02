@@ -21,11 +21,17 @@ CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  expires_at TIMESTAMPTZ NOT NULL
+  expires_at TIMESTAMPTZ NOT NULL,
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  user_agent TEXT,
+  browser TEXT,
+  platform TEXT,
+  device_name TEXT
 );
 
 -- Performance indexes for alumni listing and profile lookups.
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_alumni_user_id ON alumni_registrations(user_id);
 CREATE INDEX IF NOT EXISTS idx_alumni_phone ON alumni_registrations(phone);
 CREATE INDEX IF NOT EXISTS idx_alumni_email ON alumni_registrations(email);
@@ -60,10 +66,20 @@ ALTER TABLE alumni_registrations
   ADD COLUMN IF NOT EXISTS show_phone BOOLEAN NOT NULL DEFAULT false;
 
 ALTER TABLE alumni_registrations
+  ADD COLUMN IF NOT EXISTS show_email BOOLEAN NOT NULL DEFAULT true;
+
+ALTER TABLE alumni_registrations
   ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 
 ALTER TABLE alumni_registrations
   ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE sessions
+  ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS user_agent TEXT,
+  ADD COLUMN IF NOT EXISTS browser TEXT,
+  ADD COLUMN IF NOT EXISTS platform TEXT,
+  ADD COLUMN IF NOT EXISTS device_name TEXT;
 
 DO $$
 BEGIN

@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const MOBILE_PATTERN = /^\d{10}$/
 const PASSWORD_PLACEHOLDER = '__OTP_ONLY__'
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -52,7 +53,7 @@ serve(async (req: Request) => {
       const mobile = normalizeMobile(body.mobile_number)
       const role = await detectRole(supabase, mobile)
       const user = await ensureUser(supabase, mobile, role)
-      const session = await createSession(supabase, user.id)
+      const session = await createSession(supabase, user.id, req)
 
       return jsonOk({
         session_token: session.id,
@@ -87,7 +88,7 @@ serve(async (req: Request) => {
       }
 
       user = updated
-      const session = await createSession(supabase, user.id)
+      const session = await createSession(supabase, user.id, req)
 
       return jsonOk({
         session_token: session.id,
@@ -120,7 +121,7 @@ serve(async (req: Request) => {
         user.role = role
       }
 
-      const session = await createSession(supabase, user.id)
+      const session = await createSession(supabase, user.id, req)
       return jsonOk({
         session_token: session.id,
         user: toPublicUser(user),
@@ -133,20 +134,11 @@ serve(async (req: Request) => {
         return jsonError('Session token is required.', 400)
       }
 
-      const { data: session, error: sessionError } = await supabase
-        .from('sessions')
-        .select('id, user_id, expires_at')
-        .eq('id', sessionToken)
-        .maybeSingle()
-
-      if (sessionError || !session) {
+      const session = await getSessionByToken(supabase, sessionToken)
+      if (!session) {
         return jsonError('Invalid session.', 401)
       }
-
-      if (new Date(session.expires_at) < new Date()) {
-        await supabase.from('sessions').delete().eq('id', sessionToken)
-        return jsonError('Session expired.', 401)
-      }
+      await touchSession(supabase, session.id)
 
       const { data: user, error: userError } = await supabase
         .from('users')
@@ -172,6 +164,124 @@ serve(async (req: Request) => {
       if (sessionToken) {
         await supabase.from('sessions').delete().eq('id', sessionToken)
       }
+      return jsonOk({ success: true })
+    }
+
+    if (action === 'list-sessions') {
+      const sessionToken = String(body.session_token || '')
+      if (!sessionToken) {
+        return jsonError('Session token is required.', 400)
+      }
+
+      const session = await getSessionByToken(supabase, sessionToken)
+      if (!session) {
+        return jsonError('Invalid session.', 401)
+      }
+
+      const { data: sessions, error } = await supabase
+        .from('sessions')
+        .select('id, created_at, expires_at, last_seen_at, browser, platform, device_name')
+        .eq('user_id', session.user_id)
+        .order('last_seen_at', { ascending: false })
+
+      if (error) {
+        return jsonError(error.message || 'Failed to load sessions.', 500)
+      }
+
+      return jsonOk({
+        sessions: (sessions || []).map((entry) => ({
+          ...entry,
+          is_current: entry.id === sessionToken,
+        })),
+      })
+    }
+
+    if (action === 'revoke-session') {
+      const sessionToken = String(body.session_token || '')
+      const revokeSessionId = String(body.revoke_session_id || '')
+      if (!sessionToken || !revokeSessionId) {
+        return jsonError('Session token and revoke session id are required.', 400)
+      }
+
+      const session = await getSessionByToken(supabase, sessionToken)
+      if (!session) {
+        return jsonError('Invalid session.', 401)
+      }
+
+      const { data: target, error: targetError } = await supabase
+        .from('sessions')
+        .select('id, user_id')
+        .eq('id', revokeSessionId)
+        .maybeSingle()
+
+      if (targetError || !target || target.user_id !== session.user_id) {
+        return jsonError('Session not found.', 404)
+      }
+
+      await supabase.from('sessions').delete().eq('id', revokeSessionId)
+      return jsonOk({ success: true, revoked_current: revokeSessionId === sessionToken })
+    }
+
+    if (action === 'logout-all') {
+      const sessionToken = String(body.session_token || '')
+      if (!sessionToken) {
+        return jsonError('Session token is required.', 400)
+      }
+
+      const session = await getSessionByToken(supabase, sessionToken)
+      if (!session) {
+        return jsonError('Invalid session.', 401)
+      }
+
+      await supabase.from('sessions').delete().eq('user_id', session.user_id)
+      return jsonOk({ success: true })
+    }
+
+    if (action === 'change-password') {
+      const sessionToken = String(body.session_token || '')
+      const currentPassword = String(body.current_password || '')
+      const newPassword = String(body.new_password || '')
+
+      if (!sessionToken) {
+        return jsonError('Session token is required.', 400)
+      }
+
+      if (newPassword.length < 8) {
+        return jsonError('New password must be at least 8 characters.', 400)
+      }
+
+      const session = await getSessionByToken(supabase, sessionToken)
+      if (!session) {
+        return jsonError('Invalid session.', 401)
+      }
+
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id, mobile_number, role, password_hash')
+        .eq('id', session.user_id)
+        .maybeSingle()
+
+      if (userError || !user) {
+        return jsonError('User not found.', 401)
+      }
+
+      if (hasPassword(user)) {
+        const isCurrentValid = await verifyPassword(supabase, currentPassword, String(user.password_hash))
+        if (!isCurrentValid) {
+          return jsonError('Current password is incorrect.', 401)
+        }
+      }
+
+      const hash = await hashPassword(supabase, newPassword)
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ password_hash: hash })
+        .eq('id', user.id)
+
+      if (updateError) {
+        return jsonError(updateError.message || 'Failed to update password.', 500)
+      }
+
       return jsonOk({ success: true })
     }
 
@@ -280,14 +390,42 @@ async function updateUserRole(
   }
 }
 
-async function createSession(supabase: ReturnType<typeof createClient>, userId: string) {
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+async function getSessionByToken(supabase: ReturnType<typeof createClient>, sessionToken: string) {
+  const { data: session, error } = await supabase
+    .from('sessions')
+    .select('id, user_id, expires_at')
+    .eq('id', sessionToken)
+    .maybeSingle()
+
+  if (error || !session) return null
+
+  if (new Date(session.expires_at) < new Date()) {
+    await supabase.from('sessions').delete().eq('id', sessionToken)
+    return null
+  }
+
+  return session
+}
+
+async function createSession(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  req: Request,
+) {
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + SESSION_TTL_MS).toISOString()
+  const metadata = parseUserAgent(req.headers.get('user-agent'))
 
   const { data, error } = await supabase
     .from('sessions')
     .insert({
       user_id: userId,
       expires_at: expiresAt,
+      last_seen_at: now.toISOString(),
+      user_agent: req.headers.get('user-agent') || null,
+      browser: metadata.browser,
+      platform: metadata.platform,
+      device_name: metadata.deviceName,
     })
     .select('id')
     .single()
@@ -297,6 +435,47 @@ async function createSession(supabase: ReturnType<typeof createClient>, userId: 
   }
 
   return data
+}
+
+async function touchSession(supabase: ReturnType<typeof createClient>, sessionId: string) {
+  const threshold = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+  await supabase
+    .from('sessions')
+    .update({ last_seen_at: new Date().toISOString() })
+    .eq('id', sessionId)
+    .lt('last_seen_at', threshold)
+}
+
+function parseUserAgent(rawUserAgent: string | null) {
+  const userAgent = String(rawUserAgent || '')
+  const browser = detectBrowser(userAgent)
+  const platform = detectPlatform(userAgent)
+
+  return {
+    browser,
+    platform,
+    deviceName: `${browser} on ${platform}`,
+  }
+}
+
+function detectBrowser(userAgent: string) {
+  if (/edg\//i.test(userAgent)) return 'Edge'
+  if (/chrome\//i.test(userAgent) && !/edg\//i.test(userAgent)) return 'Chrome'
+  if (/safari\//i.test(userAgent) && !/chrome\//i.test(userAgent)) return 'Safari'
+  if (/firefox\//i.test(userAgent)) return 'Firefox'
+  if (/opr\//i.test(userAgent) || /opera/i.test(userAgent)) return 'Opera'
+  if (/samsungbrowser/i.test(userAgent)) return 'Samsung Internet'
+  return 'Unknown browser'
+}
+
+function detectPlatform(userAgent: string) {
+  if (/iphone/i.test(userAgent)) return 'iPhone'
+  if (/ipad/i.test(userAgent)) return 'iPad'
+  if (/android/i.test(userAgent)) return 'Android'
+  if (/windows/i.test(userAgent)) return 'Windows'
+  if (/mac os x|macintosh/i.test(userAgent)) return 'macOS'
+  if (/linux/i.test(userAgent)) return 'Linux'
+  return 'Unknown device'
 }
 
 async function hashPassword(supabase: ReturnType<typeof createClient>, rawPassword: string) {

@@ -14,21 +14,33 @@ import Directory from './pages/directory/Index'
 import AlumniDetail from './pages/alumniDetail/Index'
 import Events from './pages/events/Index'
 import Contact from './pages/contact/Index'
+import SettingsPrivacy from './pages/settingsPrivacy/Index'
 import FacultyRegistration from './pages/facultyRegistration/Index'
 import { onAuthChange, verifySession } from './lib/auth'
 import { isStudentRegistered } from './lib/studentRegistration'
 import { safeSessionStorageGet } from './lib/safeStorage'
 import { DirectoryCacheProvider } from './context/DirectoryCacheContext'
+import { NavbarProvider } from './context/NavbarProvider'
+import { useNavbarContext } from './context/navbarState'
 import { useInactivityLogout } from './hooks/useInactivityLogout'
 
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000
 
 function App() {
+  return (
+    <NavbarProvider>
+      <AppContent />
+    </NavbarProvider>
+  )
+}
+
+function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const navigationType = useNavigationType()
   const isDirectoryDetailPath = location.pathname.startsWith('/directory/alumni/')
-  const hideNavbar = location.pathname === '/directory' || isDirectoryDetailPath
+  const isDirectoryNavPath = location.pathname === '/directory' || isDirectoryDetailPath
+  const { directoryNavbar } = useNavbarContext()
   const [user, setUser] = useState(null)
   const [sessionChecked, setSessionChecked] = useState(false)
   const [isRegistered, setIsRegistered] = useState(null)
@@ -106,7 +118,7 @@ function App() {
   useEffect(() => {
     if (!sessionChecked || user) return
 
-    const protectedPaths = ['/register', '/alumni-space', '/directory']
+    const protectedPaths = ['/register', '/alumni-space', '/directory', '/settings-privacy']
     const isAlumniDetailPath = location.pathname.startsWith('/directory/alumni/')
     if (protectedPaths.includes(location.pathname) || isAlumniDetailPath) {
       navigate('/login', { replace: true })
@@ -178,7 +190,10 @@ function App() {
         }}
       >
         <DirectoryCacheProvider>
-          {!hideNavbar && <Navbar />}
+          <Navbar
+            variant={isDirectoryNavPath ? 'directory' : 'default'}
+            {...(isDirectoryNavPath ? directoryNavbar : {})}
+          />
           <main className="app-main">
             <Routes>
               <Route path="/" element={<Home />} />
@@ -190,6 +205,7 @@ function App() {
               <Route path="/directory/alumni/:id" element={<AlumniDetail />} />
               <Route path="/notifications" element={<Events />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/settings-privacy" element={<SettingsPrivacy />} />
               <Route path="/faculty-register" element={<FacultyRegistration />} />
             </Routes>
             <Footer />

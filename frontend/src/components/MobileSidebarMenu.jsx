@@ -6,7 +6,6 @@ function MobileSidebarMenu({
   onClose,
   user,
   profileImageUrl,
-  profileDisplayName,
   isStaff,
   navLinks,
   isActive,
@@ -46,7 +45,6 @@ function MobileSidebarMenu({
               )}
             </div>
             <div className="sidebar-mobile__profile-info">
-              {/* <span className="sidebar-mobile__profile-name">{profileDisplayName}</span> */}
               <span className="sidebar-mobile__profile-role">{isStaff ? 'Staff' : 'Alumni'}</span>
             </div>
           </Link>

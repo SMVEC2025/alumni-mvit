@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { HiMenu, HiX, HiLogout, HiUserCircle, HiHome, HiUsers, HiClipboardList, HiMail } from 'react-icons/hi'
+import { HiMenu, HiX, HiUserCircle, HiHome, HiUsers, HiClipboardList, HiMail, HiSearch } from 'react-icons/hi'
 import { getUser, onAuthChange, logout as authLogout } from '../lib/auth'
 import { isStudentRegistered } from '../lib/studentRegistration'
 import { getSupabaseWithSession } from '../lib/supabaseClient'
@@ -27,24 +27,146 @@ function setCachedRegistrationStatus(userId, registered) {
   safeLocalStorageSet(`${REG_STATUS_CACHE_PREFIX}${userId}`, registered ? '1' : '0')
 }
 
-function Navbar() {
+function UserProfileDropdown({
+  user,
+  isStaff,
+  profilePath,
+  profileImageUrl,
+  profileName,
+  batchLabel,
+  triggerClassName,
+  onLogout,
+  loggingOut,
+}) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const handlePointerDown = (event) => {
+      if (!menuRef.current?.contains(event.target)) {
+        setOpen(false)
+      }
+    }
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div className={`navbar-user-menu${open ? ' is-open' : ''}`} ref={menuRef}>
+      <button
+        type="button"
+        className={triggerClassName}
+        onClick={() => setOpen((current) => !current)}
+        aria-label="Open profile menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {profileImageUrl ? (
+          <img src={profileImageUrl} alt="Profile" />
+        ) : (
+          <HiUserCircle />
+        )}
+      </button>
+
+      <div className="navbar-user-dropdown" role="menu">
+        <div className="navbar-profile-card">
+          <Link to={profilePath} className="navbar-profile-avatar" aria-label="View profile" onClick={() => setOpen(false)}>
+            {profileImageUrl ? (
+              <img src={profileImageUrl} alt="Profile" />
+            ) : (
+              <span>{profileName?.charAt(0)?.toUpperCase() || 'A'}</span>
+            )}
+          </Link>
+          <div className="navbar-profile-copy">
+            <strong>{profileName}</strong>
+            <span>{isStaff ? 'Staff' : batchLabel}</span>
+          </div>
+        </div>
+
+        <div className="navbar-profile-actions">
+          <Link to={profilePath} className="navbar-profile-view-btn" onClick={() => setOpen(false)}>
+            View profile
+          </Link>
+        </div>
+
+        <div className="navbar-dropdown-section">
+          <p>Account</p>
+          <Link to="/settings-privacy" className="navbar-dropdown-link" onClick={() => setOpen(false)}>
+            Settings & Privacy
+          </Link>
+          <Link to="/contact" className="navbar-dropdown-link" onClick={() => setOpen(false)}>
+            Help
+          </Link>
+        </div>
+
+        <div className="navbar-dropdown-section navbar-dropdown-section--last">
+          {user && (
+            <button
+              type="button"
+              className="navbar-dropdown-link navbar-dropdown-link--danger"
+              onClick={() => {
+                setOpen(false)
+                onLogout()
+              }}
+              disabled={loggingOut}
+            >
+              {loggingOut ? 'Logging out...' : 'Logout'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Navbar({
+  variant = 'default',
+  searchValue = '',
+  onSearchChange,
+  searchPlaceholder = 'Search people, skills, companies...',
+  mobileFilterNav = null,
+  loading = false,
+}) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(() => getUser())
   const [loggingOut, setLoggingOut] = useState(false)
   const [isRegisteredAlumni, setIsRegisteredAlumni] = useState(() => getCachedRegistrationStatus(getUser()?.id))
   const [profileImageUrl, setProfileImageUrl] = useState('')
+  const [profileInfo, setProfileInfo] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [navHidden, setNavHidden] = useState(false)
   const lastScrollY = useRef(0)
   const location = useLocation()
   const resolvedProfileImageUrl = useProtectedImageUrl(profileImageUrl)
+  const isDirectoryVariant = variant === 'directory'
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => path === '/directory'
+    ? location.pathname.startsWith('/directory')
+    : location.pathname === path
   const isLoginPage = location.pathname === '/login'
-  const profileDisplayName = user?.name || user?.email || user?.mobile_number || 'Alumni User'
 
   const isStaff = user?.role === 'staff'
+  const profilePath = isStaff ? '/directory' : '/alumni-space'
+  const profileName = [
+    profileInfo?.first_name,
+    profileInfo?.last_name,
+  ].filter(Boolean).join(' ') || user?.name || user?.mobile_number || 'Alumni SMVEC'
+  const batchLabel = profileInfo?.year_of_completion
+    ? `Batch ${profileInfo.year_of_completion}`
+    : 'Batch not added'
 
   const baseLinks = [
     { path: '/', label: 'Home', icon: <HiHome /> },
@@ -136,6 +258,7 @@ function Navbar() {
   useEffect(() => {
     if (!user) {
       setProfileImageUrl('')
+      setProfileInfo(null)
       return
     }
 
@@ -144,17 +267,19 @@ function Navbar() {
       const sessionSupabase = getSupabaseWithSession()
       if (!sessionSupabase) {
         if (mounted) setProfileImageUrl('')
+        if (mounted) setProfileInfo(null)
         return
       }
 
       const { data } = await sessionSupabase
         .from('alumni_registrations')
-        .select('profile_image_url')
+        .select('profile_image_url, first_name, last_name, year_of_completion')
         .eq('user_id', user.id)
         .maybeSingle()
 
       if (!mounted) return
       setProfileImageUrl(data?.profile_image_url || '')
+      setProfileInfo(data || null)
     }
 
     loadProfileImage()
@@ -175,9 +300,111 @@ function Navbar() {
   }, [menuOpen])
 
   const handleLogout = async () => {
-    await authLogout()
-    setMenuOpen(false)
-    navigate('/login', { replace: true })
+    try {
+      setLoggingOut(true)
+      await authLogout()
+      setMenuOpen(false)
+      navigate('/login', { replace: true })
+    } finally {
+      setLoggingOut(false)
+    }
+  }
+
+  if (isDirectoryVariant) {
+    return (
+      <>
+        <header className="dir-sticky-header">
+          <div className="dir-header-inner">
+            <div className="dir-header-left">
+              <Link to="/" className="dir-header-logo" aria-label="Go to home">
+                <img src="/logo.png" alt="MVIT Alumni" />
+              </Link>
+
+              {loading ? (
+                <div className="dir-search-box alumni-detail-skeleton-search" aria-hidden="true">
+                  <span className="profile-skeleton-line profile-skeleton-line--search" />
+                </div>
+              ) : (
+                <div className="dir-search-box">
+                  <HiSearch className="dir-search-icon" />
+                  <input
+                    type="text"
+                    placeholder={searchPlaceholder}
+                    value={searchValue}
+                    onChange={(event) => onSearchChange?.(event.target.value)}
+                    aria-label="Search alumni directory"
+                  />
+                </div>
+              )}
+
+              <button
+                className="dir-mobile-menu-btn"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={menuOpen}
+                aria-controls="mobile-sidebar-menu"
+              >
+                <HiMenu />
+              </button>
+            </div>
+
+            <div className="dir-header-controls">
+              <nav className="dir-top-nav" aria-label="Directory quick navigation">
+                {loading ? (
+                  <>
+                    <span className="profile-skeleton-pill" />
+                    <span className="profile-skeleton-pill profile-skeleton-pill--wide" />
+                    <span className="profile-skeleton-pill" />
+                  </>
+                ) : (
+                  navLinks.map((item) => (
+                    <Link
+                      key={`${item.label}-${item.path}`}
+                      to={item.path}
+                      className={`dir-top-link${isActive(item.path) ? ' active' : ''}`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))
+                )}
+              </nav>
+
+              {loading ? (
+                <span className="profile-skeleton-avatar profile-skeleton-avatar--nav" aria-hidden="true" />
+              ) : (
+                <UserProfileDropdown
+                  user={user}
+                  isStaff={isStaff}
+                  profilePath={profilePath}
+                  profileImageUrl={resolvedProfileImageUrl}
+                  profileName={profileName}
+                  batchLabel={batchLabel}
+                  triggerClassName="dir-header-avatar"
+                  onLogout={handleLogout}
+                  loggingOut={loggingOut}
+                />
+              )}
+            </div>
+          </div>
+
+          {mobileFilterNav}
+        </header>
+
+        <MobileSidebarMenu
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          user={user}
+          profileImageUrl={resolvedProfileImageUrl}
+          isStaff={isStaff}
+          navLinks={navLinks}
+          isActive={isActive}
+          onLogout={handleLogout}
+          loggingOut={loggingOut}
+          profilePath={isStaff ? '/directory' : '/alumni-space'}
+          logoSrc="/img/logo/dark.svg"
+        />
+      </>
+    )
   }
 
   return (
@@ -186,7 +413,7 @@ function Navbar() {
         <div className="containerr navbar-inner">
           <Link to="/" className="navbar-logo">
             <img
-              src={scrolled && !isLoginPage ? '/img/logo/logo.png' : '/img/logo/logo.png'}
+              src={scrolled && !isLoginPage ? '/img/logo/mvit_light.svg' : '/img/logo/MVIT-logo60.png'}
               alt="MVIT Alumni"
               className="navbar-logo-img"
             />
@@ -218,31 +445,17 @@ function Navbar() {
 
             <div className="navbar-actions">
               {user ? (
-                <div className="navbar-user-menu">
-                  <Link
-                    to="/alumni-space"
-                    className="navbar-user-avatar"
-                    aria-label="Go to Alumni Space"
-                  >
-                    {resolvedProfileImageUrl ? (
-                      <img src={resolvedProfileImageUrl} alt="Profile" />
-                    ) : (
-                      <HiUserCircle />
-                    )}
-                  </Link>
-
-                  <div className="navbar-user-dropdown">
-                    <button
-                      type="button"
-                      className="navbar-dropdown-item"
-                      onClick={handleLogout}
-                      disabled={loggingOut}
-                    >
-                      <HiLogout />
-                      <span>{loggingOut ? 'Logging out...' : 'Logout'}</span>
-                    </button>
-                  </div>
-                </div>
+                <UserProfileDropdown
+                  user={user}
+                  isStaff={isStaff}
+                  profilePath={profilePath}
+                  profileImageUrl={resolvedProfileImageUrl}
+                  profileName={profileName}
+                  batchLabel={batchLabel}
+                  triggerClassName="navbar-user-avatar"
+                  onLogout={handleLogout}
+                  loggingOut={loggingOut}
+                />
               ) : (
                 <Link to="/login" className="btn btn-outline">
                   Login
@@ -258,7 +471,6 @@ function Navbar() {
         onClose={() => setMenuOpen(false)}
         user={user}
         profileImageUrl={resolvedProfileImageUrl}
-        profileDisplayName={profileDisplayName}
         isStaff={isStaff}
         navLinks={navLinks}
         isActive={isActive}

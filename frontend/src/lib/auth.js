@@ -62,6 +62,10 @@ export function getSessionToken() {
   return safeLocalStorageGet(SESSION_TOKEN_KEY)
 }
 
+export function clearLocalSession() {
+  clearSession()
+}
+
 export function getUser() {
   try {
     const raw = safeLocalStorageGet(USER_KEY)
@@ -202,6 +206,60 @@ export async function setPassword(mobileNumber, password) {
     password,
   })
   saveSession(data.session_token, data.user)
+  return data
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  const token = getSessionToken()
+  if (!token) throw new Error('Session expired. Please login again.')
+
+  return callEdgeFn({
+    action: 'change-password',
+    session_token: token,
+    current_password: currentPassword,
+    new_password: newPassword,
+  })
+}
+
+export async function logoutAllDevices() {
+  const token = getSessionToken()
+  if (!token) {
+    clearSession()
+    return { success: true }
+  }
+
+  const data = await callEdgeFn({
+    action: 'logout-all',
+    session_token: token,
+  })
+  clearSession()
+  return data
+}
+
+export async function listSessions() {
+  const token = getSessionToken()
+  if (!token) throw new Error('Session expired. Please login again.')
+
+  return callEdgeFn({
+    action: 'list-sessions',
+    session_token: token,
+  })
+}
+
+export async function revokeSession(revokeSessionId) {
+  const token = getSessionToken()
+  if (!token) throw new Error('Session expired. Please login again.')
+
+  const data = await callEdgeFn({
+    action: 'revoke-session',
+    session_token: token,
+    revoke_session_id: revokeSessionId,
+  })
+
+  if (data?.revoked_current) {
+    clearSession()
+  }
+
   return data
 }
 

@@ -3,29 +3,24 @@ import {
   HiAcademicCap,
   HiOfficeBuilding,
   HiSearch,
-  HiHome,
-  HiUsers,
-  HiMail,
   HiViewGrid,
   HiViewList,
   HiLocationMarker,
   HiFilter,
-  HiMenu,
   HiX,
   HiArrowRight,
-  HiUserCircle,
   HiChevronDown,
 } from 'react-icons/hi'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
 import { getSupabaseWithSession, isSupabaseConfigured, supabase } from '../../lib/supabaseClient'
-import { getUser, onAuthChange, verifySession, logout as authLogout } from '../../lib/auth'
+import { getUser, onAuthChange, verifySession } from '../../lib/auth'
 import { isStudentRegistered } from '../../lib/studentRegistration'
 import CompanyLogo from '../../components/CompanyLogo'
-import MobileSidebarMenu from '../../components/MobileSidebarMenu'
 import { useDirectoryCache } from '../../context/DirectoryCacheContext'
+import { useDirectoryNavbar } from '../../context/navbarState'
 import { fetchDirectoryFilterMetadata, fetchDirectoryPage } from '../../lib/directoryApi'
-import { useProtectedImageUrl, useProtectedImageUrls } from '../../hooks/useProtectedImageUrl'
+import { useProtectedImageUrls } from '../../hooks/useProtectedImageUrl'
 import companyFilterOptions from '../../../company-filter-options.json'
 import locationFilterOptions from '../../../location-filter-options.json'
 
@@ -574,10 +569,6 @@ function Directory() {
   const [hasDirectoryAccess, setHasDirectoryAccess] = useState(false)
   const [authReady, setAuthReady] = useState(configMissing)
   const [viewer, setViewer] = useState(() => getUser())
-  const [menuOpen, setMenuOpen] = useState(false)
-  const loggingOut = false
-  const [profileImageUrl, setProfileImageUrl] = useState('')
-  const resolvedProfileImageUrl = useProtectedImageUrl(profileImageUrl)
 
   const initialCacheKey = buildDirectoryCacheKey(viewer)
   const hasInitialCache =
@@ -632,21 +623,6 @@ function Directory() {
     }),
   )
   const isStaff = viewer?.role === 'staff'
-  const profileDisplayName = viewer?.name || viewer?.email || viewer?.mobile_number || 'Alumni User'
-  const profilePath = isStaff ? '/directory' : '/alumni-space'
-  const isActive = (path) => location.pathname === path
-  const topNavLinks = [
-    { path: '/', label: 'Home' },
-    { path: '/directory', label: 'Explore Alumni' },
-    ...(!isStaff ? [{ path: profilePath, label: 'My Profile' }] : []),
-    { path: '/contact', label: 'Contact Us' },
-  ]
-  const mobileNavLinks = [
-    { path: '/', label: 'Home', icon: <HiHome /> },
-    { path: '/directory', label: 'Explore Alumni', icon: <HiUsers /> },
-    ...(!isStaff ? [{ path: profilePath, label: 'My Profile', icon: <HiUserCircle /> }] : []),
-    { path: '/contact', label: 'Contact Us', icon: <HiMail /> },
-  ]
   const cityOptions = useMemo(() => cities.map((city) => ({ key: city.key, label: city.label })), [cities])
   const companyOptions = useMemo(() => companies.map((company) => ({ key: company.key, label: company.label })), [companies])
   const departmentFilterTerm = useMemo(
@@ -862,41 +838,6 @@ function Directory() {
     return () => unsubscribe()
   }, [])
 
-  useEffect(() => {
-    let mounted = true
-
-    if (!viewer?.id) {
-      queueMicrotask(() => {
-        if (mounted) setProfileImageUrl('')
-      })
-      return () => {
-        mounted = false
-      }
-    }
-
-    const loadProfileImage = async () => {
-      const sessionSupabase = getSupabaseWithSession()
-      if (!sessionSupabase) {
-        if (mounted) setProfileImageUrl('')
-        return
-      }
-
-      const { data } = await sessionSupabase
-        .from('alumni_registrations')
-        .select('profile_image_url')
-        .eq('user_id', viewer.id)
-        .maybeSingle()
-
-      if (!mounted) return
-      setProfileImageUrl(data?.profile_image_url || '')
-    }
-
-    loadProfileImage()
-    return () => {
-      mounted = false
-    }
-  }, [viewer])
-
   const closeDrawer = useCallback(() => {
     setDrawerOpen(false)
     filterBtnRef.current?.focus()
@@ -945,11 +886,11 @@ function Directory() {
   }, [drawerOpen, closeDrawer])
 
   useEffect(() => {
-    document.body.style.overflow = drawerOpen || menuOpen ? 'hidden' : ''
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
-  }, [drawerOpen, menuOpen])
+  }, [drawerOpen])
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 600)
@@ -1065,6 +1006,36 @@ function Directory() {
     { key: 'name', label: 'Sort: Name' },
     { key: 'company', label: 'Sort: Company' },
   ]
+  const mobileFilterNav = useMemo(() => (
+    <div className="dir-mobile-filter-nav" role="navigation" aria-label="Mobile quick filters">
+      <button ref={filterBtnRef} className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
+        <HiAcademicCap />
+        {selectedDeptLabel}
+      </button>
+      <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
+        {filters.year || 'Batch'}
+      </button>
+      <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
+        <HiLocationMarker />
+        {selectedCityLabel}
+      </button>
+      {isStaff && (
+        <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
+          {staffVisibilityFilter === 'disabled' ? 'Disabled Alumni' : 'All Alumni'}
+        </button>
+      )}
+
+      <button className="dir-mobile-pill dir-mobile-pill--icon" type="button" onClick={() => setDrawerOpen(true)} aria-label="More filters">
+        <HiFilter />
+      </button>
+    </div>
+  ), [filters.year, isStaff, selectedCityLabel, selectedDeptLabel, staffVisibilityFilter])
+
+  useDirectoryNavbar({
+    searchValue: searchInput,
+    onSearchChange: setSearchInput,
+    mobileFilterNav,
+  })
 
   const handleStaffVisibilityToggle = async (row) => {
     if (!isStaff || !row?.id) return
@@ -1129,12 +1100,6 @@ function Directory() {
     )
   }
 
-  const handleLogout = async () => {
-    await authLogout()
-    setMenuOpen(false)
-    navigate('/login', { replace: true })
-  }
-
   if (authReady && !hasDirectoryAccess) {
     return (
       <div className="directory-page page-content">
@@ -1149,81 +1114,6 @@ function Directory() {
 
   return (
     <div className="directory-page page-content">
-      <div className="dir-sticky-header">
-        <div className="dir-header-inner">
-          <div className="dir-header-left">
-            <Link to="/" className="dir-header-logo" aria-label="Go to home">
-              <img src="/logo.png" alt="MVIT Alumni" />
-            </Link>
-            <div className="dir-search-box">
-              <HiSearch className="dir-search-icon" />
-              <input
-                type="text"
-                placeholder="Search people, skills, companies..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                aria-label="Search alumni directory"
-              />
-            </div>
-            <button
-              className="dir-mobile-menu-btn"
-              onClick={() => setMenuOpen(true)}
-              ref={filterBtnRef}
-              aria-label="Open menu"
-              aria-expanded={menuOpen}
-              aria-controls="mobile-sidebar-menu"
-            >
-              <HiMenu />
-            </button>
-          </div>
-
-          <div className="dir-header-controls">
-            <nav className="dir-top-nav" aria-label="Directory quick navigation">
-              {topNavLinks.map((item) => (
-                <Link
-                  key={`${item.label}-${item.path}`}
-                  to={item.path}
-                  className={`dir-top-link${location.pathname === item.path ? ' active' : ''}`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <Link to={profilePath} className="dir-header-avatar" aria-label="My profile">
-              {resolvedProfileImageUrl ? (
-                <img src={resolvedProfileImageUrl} alt="Profile" />
-              ) : (
-                <HiUserCircle />
-              )}
-            </Link>
-          </div>
-
-        </div>
-        <div className="dir-mobile-filter-nav" role="navigation" aria-label="Mobile quick filters">
-          <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
-            <HiAcademicCap />
-            {selectedDeptLabel}
-          </button>
-          <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
-            {filters.year || 'Batch'}
-          </button>
-          <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
-            <HiLocationMarker />
-            {selectedCityLabel}
-          </button>
-          {isStaff && (
-            <button className="dir-mobile-pill" type="button" onClick={() => setDrawerOpen(true)}>
-              {staffVisibilityFilter === 'disabled' ? 'Disabled Alumni' : 'All Alumni'}
-            </button>
-          )}
-
-          <button className="dir-mobile-pill dir-mobile-pill--icon" type="button" onClick={() => setDrawerOpen(true)} aria-label="More filters">
-            <HiFilter />
-          </button>
-        </div>
-      </div>
-
       <div className="dir-layout">
         <aside className="dir-sidebar" aria-label="Filters">
           <div className="dir-sidebar-card">
@@ -1423,20 +1313,6 @@ function Directory() {
         onClick={closeDrawer}
         aria-hidden="true"
       />
-      <MobileSidebarMenu
-        open={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        user={viewer}
-        profileImageUrl={resolvedProfileImageUrl}
-        profileDisplayName={profileDisplayName}
-        isStaff={isStaff}
-        navLinks={mobileNavLinks}
-        isActive={isActive}
-        onLogout={handleLogout}
-        loggingOut={loggingOut}
-        profilePath={profilePath}
-        logoSrc="/img/logo/dark.svg"
-      />
       <div
         id="directory-filter-drawer"
         className={`dir-drawer${drawerOpen ? ' dir-drawer--open' : ''}`}
@@ -1542,10 +1418,7 @@ function DirectorySelect({
     : allOptions
 
   useEffect(() => {
-    if (!open) {
-      setQuery('')
-      return undefined
-    }
+    if (!open) return undefined
 
     const focusTimer = window.setTimeout(() => {
       searchRef.current?.focus()
@@ -1554,10 +1427,14 @@ function DirectorySelect({
     const onPointerDown = (event) => {
       if (!selectRef.current?.contains(event.target)) {
         setOpen(false)
+        setQuery('')
       }
     }
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') {
+        setOpen(false)
+        setQuery('')
+      }
     }
 
     document.addEventListener('pointerdown', onPointerDown)
@@ -1572,6 +1449,7 @@ function DirectorySelect({
   const handleSelect = (nextValue) => {
     onChange(nextValue)
     setOpen(false)
+    setQuery('')
   }
 
   const handleSearchKeyDown = (event) => {
@@ -1593,7 +1471,14 @@ function DirectorySelect({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-label={ariaLabel}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          if (open) {
+            setOpen(false)
+            setQuery('')
+          } else {
+            setOpen(true)
+          }
+        }}
       >
         <span className="dir-select__value">{selected?.label || placeholder}</span>
         <HiChevronDown className="dir-select__chevron" aria-hidden="true" />

@@ -115,7 +115,7 @@
     text-decoration: none;
 
     .navbar-logo-img {
-      height: 45px;
+      height: 55px;
       width: auto;
       object-fit: contain;
     }
@@ -204,8 +204,7 @@
       display: flex;
       align-items: center;
 
-      &:hover .navbar-user-dropdown,
-      &:focus-within .navbar-user-dropdown {
+      &.is-open .navbar-user-dropdown {
         opacity: 1;
         transform: translate(-50%, 0);
         pointer-events: auto;
@@ -214,10 +213,10 @@
     }
 
     .navbar-user-avatar {
+      border: 2px solid rgba(#fff, 0.65);
       width: 42px;
       height: 42px;
       border-radius: 999px;
-      border: 2px solid rgba(#fff, 0.65);
       background: #ffffff1f;
       display: inline-flex;
       align-items: center;
@@ -226,6 +225,7 @@
       color: #fff;
       transition: $transition;
       text-decoration: none;
+      cursor: pointer;
 
       img {
         width: 100%;
@@ -328,6 +328,223 @@
 
 
 // ── Mobile Sidebar Overlay ─────────────────────────────────────────────────
+.navbar-user-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  &.is-open .navbar-user-dropdown {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+}
+
+.navbar-user-dropdown {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  width: 270px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid #d8d8d8;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(20, 24, 39, 0.18);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transform-origin: top center;
+  pointer-events: none;
+  transition: opacity 0.18s ease 0.12s, transform 0.18s ease 0.12s;
+  overflow: hidden;
+  z-index: 1300;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -12px;
+    height: 12px;
+  }
+}
+
+.navbar-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 14px 10px;
+}
+
+.navbar-profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #5d6dc9;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  text-decoration: none;
+  font-family: 'Futura PT', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.navbar-profile-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    color: #111827;
+    font-family: 'Futura PT', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    color: #3f3f46;
+    font-family: 'Futura PT', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.28;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.navbar-profile-actions {
+  padding: 4px 14px 10px;
+}
+
+.navbar-profile-view-btn {
+  min-height: 40px;
+  border: 1.5px solid #0a66c2;
+  border-radius: 999px;
+  color: #0a66c2;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  text-decoration: none;
+  font-family: 'Futura PT', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  width: 100%;
+  transition: background 0.16s ease, box-shadow 0.16s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: #eef6ff;
+    box-shadow: inset 0 0 0 1px #0a66c2;
+    outline: none;
+  }
+}
+
+.navbar-dropdown-section {
+  border-top: 1px solid #e5e7eb;
+  padding: 12px 14px 10px;
+
+  p {
+    margin: 0 0 8px;
+    color: #1f2937;
+    font-family: 'Futura PT', sans-serif;
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+
+  &--last {
+    padding: 0;
+  }
+}
+
+.navbar-dropdown-link {
+  width: 100%;
+  min-height: 31px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #5f5f5f;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  text-decoration: none;
+  font-family: 'Futura PT', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 0.16s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: #0a66c2;
+    outline: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  &--danger {
+    min-height: 42px;
+    padding: 0 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-user-dropdown {
+    right: 0;
+    left: auto;
+    width: min(270px, calc(100vw - 24px));
+    transform: translate(0, 8px);
+  }
+
+  .navbar-user-menu.is-open .navbar-user-dropdown {
+    transform: translate(0, 0);
+  }
+}
+
+.navbar .navbar-actions .navbar-user-dropdown {
+  right: 0;
+  left: auto;
+  width: 270px;
+  min-width: 0;
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 18px 42px rgba(20, 24, 39, 0.18);
+  transform: translate(0, 8px);
+  overflow: hidden;
+}
+
+.navbar .navbar-actions .navbar-user-menu.is-open .navbar-user-dropdown {
+  transform: translate(0, 0);
+}
+
+.dir-header-controls .navbar-user-dropdown {
+  right: 0;
+  left: auto;
+  transform: translate(0, 8px);
+}
+
+.dir-header-controls .navbar-user-menu.is-open .navbar-user-dropdown {
+  transform: translate(0, 0);
+}
+
 .sidebar-overlay {
   position: fixed;
   inset: 0;

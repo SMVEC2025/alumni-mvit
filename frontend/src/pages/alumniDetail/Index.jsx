@@ -12,20 +12,14 @@ import {
     HiGlobe,
     HiUserGroup,
     HiExternalLink,
-    HiSearch,
-    HiMenu,
-    HiHome,
-    HiUsers,
-    HiUserCircle,
-    HiMail as HiMailNav,
 } from 'react-icons/hi'
 import { FaLinkedinIn } from "react-icons/fa";
 
 import { getSupabaseWithSession } from '../../lib/supabaseClient'
-import { getUser, onAuthChange, verifySession, logout as authLogout } from '../../lib/auth'
+import { verifySession } from '../../lib/auth'
 import { isStudentRegistered } from '../../lib/studentRegistration'
 import CompanyLogo from '../../components/CompanyLogo'
-import MobileSidebarMenu from '../../components/MobileSidebarMenu'
+import { useDirectoryNavbar } from '../../context/navbarState'
 import { uploadAlumniImage } from '../../lib/imageUpload'
 import { normalizeLinkedInUrl } from '../../lib/profileLinks'
 import { useProtectedImageUrl, useProtectedImageUrls } from '../../hooks/useProtectedImageUrl'
@@ -94,9 +88,6 @@ function AlumniDetail() {
     const [isOwnProfile, setIsOwnProfile] = useState(false)
     const [coverUploading, setCoverUploading] = useState(false)
     const [suggestedAlumni, setSuggestedAlumni] = useState([])
-    const [viewer, setViewer] = useState(() => getUser())
-    const [menuOpen, setMenuOpen] = useState(false)
-    const [profileImageUrl, setProfileImageUrl] = useState('')
     const [searchInput, setSearchInput] = useState('')
     const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false)
     const [statusMutating, setStatusMutating] = useState(false)
@@ -104,9 +95,7 @@ function AlumniDetail() {
     const coverInputRef = useRef(null)
     const lastAvatarTapRef = useRef(0)
 
-    const loggingOut = false
-    const isStaff = viewer?.role === 'staff'
-    const resolvedViewerProfileImageUrl = useProtectedImageUrl(profileImageUrl)
+    const isStaff = currentUser?.role === 'staff'
     const resolvedCoverImageUrl = useProtectedImageUrl(alumni?.cover_image_url)
     const resolvedAlumniProfileImageUrl = useProtectedImageUrl(alumni?.profile_image_url)
     const suggestedImageSources = useMemo(
@@ -114,21 +103,6 @@ function AlumniDetail() {
         [suggestedAlumni],
     )
     const protectedSuggestedImageUrls = useProtectedImageUrls(suggestedImageSources)
-    const profileDisplayName = viewer?.name || viewer?.email || viewer?.mobile_number || 'Alumni User'
-    const profilePath = isStaff ? '/directory' : '/alumni-space'
-    const navLinks = [
-        { path: '/', label: 'Home', icon: <HiHome /> },
-        { path: '/directory', label: 'Explore Alumni', icon: <HiUsers /> },
-        ...(!isStaff ? [{ path: profilePath, label: 'My Profile', icon: <HiUserCircle /> }] : []),
-        { path: '/contact', label: 'Contact Us', icon: <HiMailNav /> },
-    ]
-    const topNavLinks = [
-        { path: '/', label: 'Home' },
-        { path: '/directory', label: 'Explore Alumni' },
-        ...(!isStaff ? [{ path: profilePath, label: 'My Profile' }] : []),
-        { path: '/contact', label: 'Contact Us' },
-    ]
-    const isActive = (path) => path === '/directory' ? location.pathname.startsWith('/directory') : location.pathname === path
 
     useEffect(() => {
         let mounted = true
@@ -163,46 +137,11 @@ function AlumniDetail() {
     }, [navigate])
 
     useEffect(() => {
-        const unsubscribe = onAuthChange((nextUser) => {
-            setViewer(nextUser)
-        })
-        return () => unsubscribe()
-    }, [])
-
-    useEffect(() => {
-        if (!viewer?.id) {
-            queueMicrotask(() => setProfileImageUrl(''))
-            return
-        }
-
-        let mounted = true
-        const loadProfileImage = async () => {
-            const sessionSupabase = getSupabaseWithSession()
-            if (!sessionSupabase) {
-                if (mounted) setProfileImageUrl('')
-                return
-            }
-
-            const { data } = await sessionSupabase
-                .from('alumni_registrations')
-                .select('profile_image_url')
-                .eq('user_id', viewer.id)
-                .maybeSingle()
-
-            if (!mounted) return
-            setProfileImageUrl(data?.profile_image_url || '')
-        }
-
-        loadProfileImage()
-        return () => { mounted = false }
-    }, [viewer])
-
-    useEffect(() => {
-        document.body.style.overflow = (menuOpen || avatarPreviewOpen) ? 'hidden' : ''
+        document.body.style.overflow = avatarPreviewOpen ? 'hidden' : ''
         return () => {
             document.body.style.overflow = ''
         }
-    }, [menuOpen, avatarPreviewOpen])
+    }, [avatarPreviewOpen])
 
     useEffect(() => {
         if (!avatarPreviewOpen) return undefined
@@ -348,12 +287,6 @@ function AlumniDetail() {
         setAlumni(prev => ({ ...prev, cover_image_url: coverUrl }))
     }
 
-    const handleLogout = async () => {
-        await authLogout()
-        setMenuOpen(false)
-        navigate('/login', { replace: true })
-    }
-
     const handleBackToDirectory = () => {
         if (location.state?.fromDirectory && window.history.length > 1) {
             navigate(-1)
@@ -419,6 +352,12 @@ function AlumniDetail() {
 
         lastAvatarTapRef.current = now
     }
+
+    useDirectoryNavbar({
+        searchValue: searchInput,
+        onSearchChange: setSearchInput,
+        loading,
+    })
 
     if (loading) {
         return (
@@ -529,72 +468,6 @@ function AlumniDetail() {
 
     return (
         <div className="alumni-detail-page page-content">
-            <div className="dir-sticky-header">
-                <div className="dir-header-inner">
-                    <div className="dir-header-left">
-                        <Link to="/" className="dir-header-logo" aria-label="Go to home">
-                            <img src="/logo.png" alt="MVIT Alumni" />
-                        </Link>
-                        <div className="dir-search-box">
-                            <HiSearch className="dir-search-icon" />
-                            <input
-                                type="text"
-                                placeholder="Search people, skills, companies..."
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                aria-label="Search alumni directory"
-                            />
-                        </div>
-                        <button
-                            className="dir-mobile-menu-btn"
-                            onClick={() => setMenuOpen(true)}
-                            aria-label="Open menu"
-                            aria-expanded={menuOpen}
-                            aria-controls="mobile-sidebar-menu"
-                        >
-                            <HiMenu />
-                        </button>
-                    </div>
-
-                    <div className="dir-header-controls">
-                        <nav className="dir-top-nav" aria-label="Directory quick navigation">
-                            {topNavLinks.map((item) => (
-                                <Link
-                                    key={`${item.label}-${item.path}`}
-                                    to={item.path}
-                                    className={`dir-top-link${isActive(item.path) ? ' active' : ''}`}
-                                >
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </nav>
-
-                        <Link to={profilePath} className="dir-header-avatar" aria-label="My profile">
-                            {resolvedViewerProfileImageUrl ? (
-                                <img src={resolvedViewerProfileImageUrl} alt="Profile" />
-                            ) : (
-                                <HiUserCircle />
-                            )}
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            <MobileSidebarMenu
-                open={menuOpen}
-                onClose={() => setMenuOpen(false)}
-                user={viewer}
-                profileImageUrl={resolvedViewerProfileImageUrl}
-                profileDisplayName={profileDisplayName}
-                isStaff={isStaff}
-                navLinks={navLinks}
-                isActive={isActive}
-                onLogout={handleLogout}
-                loggingOut={loggingOut}
-                profilePath={profilePath}
-                logoSrc="/img/logo/dark.svg"
-            />
-
             {/* <div className="alumni-detail-header-bg"></div> */}
 
             <div className="container">
@@ -865,7 +738,7 @@ function AlumniDetail() {
                         <div className="sidebar-card card">
                             <h3 className="sidebar-title">Contact Information</h3>
                             <ul className="contact-list">
-                                {alumni.email && (
+                                {alumni.email && (isOwnProfile || alumni.show_email !== false) && (
                                     <li>
                                         <HiMail className="contact-icon" />
                                         <div className="contact-info">
@@ -957,28 +830,6 @@ function AlumniDetail() {
 function AlumniDetailSkeleton() {
     return (
         <div className="alumni-detail-page alumni-detail-page--loading page-content">
-            <div className="dir-sticky-header">
-                <div className="dir-header-inner">
-                    <div className="dir-header-left">
-                        <Link to="/" className="dir-header-logo" aria-label="Go to home">
-                            <img src="/logo.png" alt="MVIT Alumni" />
-                        </Link>
-                        <div className="dir-search-box alumni-detail-skeleton-search" aria-hidden="true">
-                            <span className="profile-skeleton-line profile-skeleton-line--search" />
-                        </div>
-                    </div>
-
-                    <div className="dir-header-controls">
-                        <nav className="dir-top-nav" aria-label="Directory quick navigation">
-                            <span className="profile-skeleton-pill" />
-                            <span className="profile-skeleton-pill profile-skeleton-pill--wide" />
-                            <span className="profile-skeleton-pill" />
-                        </nav>
-                        <span className="profile-skeleton-avatar profile-skeleton-avatar--nav" aria-hidden="true" />
-                    </div>
-                </div>
-            </div>
-
             <div className="container">
                 <div className="back-link profile-skeleton-back" aria-hidden="true">
                     <span className="profile-skeleton-line profile-skeleton-line--back" />

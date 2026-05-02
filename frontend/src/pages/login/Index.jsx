@@ -56,7 +56,7 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
+  const [, setMessage] = useState('')
   const [otpResendSeconds, setOtpResendSeconds] = useState(0)
   const isBusy = isLoading || isBootstrapping
 
