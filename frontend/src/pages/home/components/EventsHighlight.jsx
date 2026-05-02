@@ -2,33 +2,33 @@ const eventsData = [
   {
     id: 1,
     dayName: 'Mon',
-    day: '26',
-    month: 'Jan',
-    image: 'https://smvec.ac.in/wp-content/uploads/2026/02/image-3-1024x682.jpeg',
+    day: '5',
+    month: 'Feb',
+    image: '/img/alumni-events/1.jpeg',
     location: 'MVIT Campus',
-    title: 'Republic Day Celebration 2026',
-    desc: 'MVIT celebrated the 77th Republic Day with great pride on 26th January 2026.',
+    title: '4th STELLAR’S TROPHY”',
+    desc: 'MVIT ALUMNI of 2013-2017 batch conducted “4th STELLAR’S TROPHY” on 5&6-2-2021.',
     tag: 'Reunion',
   },
   {
     id: 2,
     dayName: 'Mon',
-    day: '12',
-    month: 'Jan',
-    image: 'https://smvec.ac.in/wp-content/uploads/2026/01/image.jpeg',
+    day: '14',
+    month: 'Dec',
+    image: '/img/alumni-events/2.jpg',
     location: 'MVIT Campus',
-    title: 'Pongal Thiruvizha 2026',
-    desc: 'Pongal Thiruvizha 2026 was celebrated with great enthusiasm and cultural spirit at Manakula Vinayagar Institute of Technology (MVIT). ',
+    title: 'Alumni Meet 2018',
+    desc: 'lumni Meet at Manakula Vinayagar Institute of Technology (MVIT). ',
     tag: 'Celebration',
   },
   {
     id: 3,
     dayName: 'mon',
-    day: '05',
-    month: 'Jan',
-    image: 'https://smvec.ac.in/wp-content/uploads/2025/12/image-43-1024x683.jpeg',
+    day: '11',
+    month: 'May',
+    image: '/img/alumni-events/3.webp',
     location: 'Main Auditorium',
-    title: 'Reach the unreach – Indian space programme',
+    title: 'Fruition 23',
     desc: 'An insightful technical talk titled “Reach the Unreached – Indian Space Programme” was successfully organized to create awareness about India’s remarkable journey in space science and its applications for national development.',
     tag: 'Ceremony',
   },
@@ -40,7 +40,7 @@ function EventsHighlight() {
       <div className="container">
         <div className="events-highlight-header">
           <p className="events-eyebrow">What&apos;s On</p>
-          <h2>Upcoming Events</h2>
+          <h2>Our Events</h2>
           <p className="events-sub">Don&apos;t miss out on exciting alumni events</p>
         </div>
 
@@ -82,7 +82,7 @@ function EventsHighlight() {
                 </span>
                 <h3 className="event-img-title">{event.title}</h3>
                 <a
-                  href="https://smvec.ac.in/events"
+                  href="https://mvit.edu.in/events"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="event-register-btn"
@@ -96,7 +96,7 @@ function EventsHighlight() {
 
         <div className="events-view-all">
           <a
-            href="https://smvec.ac.in/events"
+            href="https://mvit.edu.in/events"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-outline"

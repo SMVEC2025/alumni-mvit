@@ -405,7 +405,7 @@
   gap: 4px;
   font-family: 'Futura PT', sans-serif;
   font-size: 0.82rem;
-  color: #d8a42d;
+  color: #044d5a;
   text-decoration: none;
   font-weight: 500;
   margin-top: 4px;
@@ -527,15 +527,15 @@
 }
 
 .org-logo--company {
-  background: rgba(55, 65, 154, 0.06);
-  color: #37419a;
-  border: 1px solid rgba(55, 65, 154, 0.12);
+  background: #044d5a15;
+  color: #044d5a;
+  border: 1px solid #044d5a25;
 }
 
 .org-logo--edu {
-  background: rgba(55, 65, 154, 0.06);
-  color: #37419a;
-  border: 1px solid rgba(55, 65, 154, 0.12);
+   background: #044d5a15;
+  color: #044d5a;
+  border: 1px solid #044d5a25;
 }
 
 /* ── Action Buttons ── */
@@ -562,7 +562,7 @@
 }
 
 .btn-profile-primary {
-  background: #d8a42d;
+  background: #044d5a;
   color: #fff;
 }
 
@@ -598,7 +598,7 @@
 }
 
 .section-heading svg {
-  color: #d8a42d;
+  color: #044d5a;
   font-size: 1.15rem;
 }
 
@@ -633,7 +633,7 @@
 
 .highlight-icon-wrap--education {
   background: rgba(55, 65, 154, 0.08);
-  color: #37419a;
+  color: #044d5a;
 }
 
 .highlight-icon-wrap--industry {
@@ -702,7 +702,7 @@
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
-  color: #d8a42d;
+  color: #044d5a;
   flex-shrink: 0;
   border: 1px solid #ece9e2;
 }
@@ -713,7 +713,7 @@
 }
 
 .edu-logo {
-  background: linear-gradient(135deg, #37419a, #5a6abf);
+  background: linear-gradient(135deg, #044d5ab2, #044d5a);
   color: #fff;
   border: none;
 }
@@ -790,7 +790,7 @@
 
 .contact-icon {
   font-size: 1.15rem;
-  color: #d8a42d;
+  color: #044d5a;
   margin-top: 2px;
   flex-shrink: 0;
 }
@@ -822,7 +822,7 @@
 }
 
 .contact-info a:hover {
-  color: #d8a42d;
+  color: #044d5a;
 }
 
 /* ── Suggested Alumni ── */
@@ -871,7 +871,7 @@
 .suggested-avatar-fallback {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #e6c35c, #d8a42d);
+  background: linear-gradient(135deg, #e6c35c, #044d5a);
   color: #fff;
   display: flex;
   align-items: center;

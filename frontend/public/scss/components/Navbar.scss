@@ -57,8 +57,13 @@
 
   // ── Login page: split — transparent over brand panel, white over form panel
   &.navbar--login {
-    background: linear-gradient(to right, transparent 45%, #ffffff 45%);
+    background: linear-gradient(to right, transparent 55%, #ffffff 45%);
     box-shadow: none;
+
+    // Hide logo on the login page — brand identity is already in the brand panel.
+    .navbar-logo {
+      display: none;
+    }
 
     .navbar-links a {
       color: $text-dark;
