@@ -1,11 +1,10 @@
-import axios from 'axios'
 import {
   safeLocalStorageGet,
   safeLocalStorageSet,
   safeLocalStorageRemove,
 } from './safeStorage'
 
-const OTP_API_URL = 'https://agribackend.vercel.app/api/send-otp'
+const OTP_API_BASE = import.meta.env.VITE_OTP_API_URL || 'https://smv-auth-otp.vercel.app'
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 const EDGE_FN_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/auth-handler` : ''
@@ -125,32 +124,24 @@ async function callEdgeFn(body) {
   return data
 }
 
-function extractOtp(responseData) {
-  const directMatch = String(responseData ?? '').match(/\b\d{6}\b/)
-  if (directMatch?.[0]) return directMatch[0]
-
-  const candidates = [
-    responseData?.otp,
-    responseData?.OTP,
-    responseData?.data?.otp,
-    responseData?.data?.OTP,
-    responseData?.message,
-  ]
-
-  for (const value of candidates) {
-    const digits = String(value ?? '').match(/\d{6}/)
-    if (digits?.[0]) return digits[0]
+async function callOtpApi(path, body) {
+  let res
+  try {
+    res = await fetch(`${OTP_API_BASE}/api${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new AuthApiError('Unable to reach the OTP service. Check your connection and try again.', 0)
   }
 
-  if (responseData && typeof responseData === 'object') {
-    for (const [key, value] of Object.entries(responseData)) {
-      if (!String(key).toLowerCase().includes('otp')) continue
-      const keyMatch = String(value ?? '').match(/\b\d{6}\b/)
-      if (keyMatch?.[0]) return keyMatch[0]
-    }
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok || data?.status !== 'success') {
+    throw new AuthApiError(data?.message || 'OTP request failed.', res.status)
   }
-
-  throw new Error('OTP not returned by API.')
+  return data
 }
 
 export async function sendOtp(mobileNumber) {
@@ -159,14 +150,16 @@ export async function sendOtp(mobileNumber) {
     throw new Error('Enter a valid 10-digit mobile number.')
   }
 
-  const response = await axios.post(OTP_API_URL, {
-    mobile_number: cleaned,
-  })
+  return callOtpApi('/send-otp', { mobile_number: cleaned })
+}
 
-  return {
-    otp: extractOtp(response.data),
-    raw: response.data,
+export async function verifyOtp(otp) {
+  const trimmed = String(otp || '').trim()
+  if (!/^\d{6}$/.test(trimmed)) {
+    throw new Error('Please enter the 6-digit OTP.')
   }
+
+  return callOtpApi('/verify-otp', { otp: trimmed })
 }
 
 export async function checkMobileStatus(mobileNumber) {

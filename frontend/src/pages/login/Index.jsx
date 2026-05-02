@@ -7,6 +7,7 @@ import {
   otpLogin,
   sendOtp,
   setPassword,
+  verifyOtp,
   verifySession,
 } from '../../lib/auth'
 import { isStudentRegistered } from '../../lib/studentRegistration'
@@ -47,7 +48,6 @@ function Login() {
   const [otpPurpose, setOtpPurpose] = useState('')
   const [mobileNumber, setMobileNumber] = useState('')
   const [detectedRole, setDetectedRole] = useState('')
-  const [serverOtp, setServerOtp] = useState('')
   const [otpDigits, setOtpDigits] = useState(Array(OTP_LENGTH).fill(''))
   const [password, setPasswordState] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -128,7 +128,6 @@ function Login() {
 
   const resetOtp = () => {
     setOtpDigits(Array(OTP_LENGTH).fill(''))
-    setServerOtp('')
   }
 
   const focusOtpInput = (index) => {
@@ -162,14 +161,12 @@ function Login() {
     setOtpPurpose(purpose)
     setStep('otp')
     setOtpDigits(Array(OTP_LENGTH).fill(''))
-    setServerOtp('')
     setOtpResendSeconds(0)
     setIsSendingOtp(true)
     try {
       const response = await sendOtp(cleaned)
-      setServerOtp(String(response.otp || ''))
       setOtpResendSeconds(OTP_RESEND_SECONDS)
-      setMessage(successMessage || 'OTP sent successfully.')
+      setMessage(response?.message || successMessage || 'OTP sent successfully.')
 
       setTimeout(() => focusOtpInput(0), 0)
     } catch (err) {
@@ -286,19 +283,9 @@ function Login() {
       return
     }
 
-    if (!serverOtp) {
-      setError('OTP not available yet. Please resend OTP.')
-      return
-    }
-
     const enteredOtp = otpDigits.join('')
     if (!/^\d{6}$/.test(enteredOtp)) {
       setError('Please enter the 6-digit OTP.')
-      return
-    }
-
-    if (enteredOtp !== serverOtp) {
-      setError('Invalid OTP. Please check and try again.')
       return
     }
 
@@ -306,6 +293,10 @@ function Login() {
 
     setIsLoading(true)
     try {
+      // Server-side verification — backend matches the OTP against the
+      // mobile session it issued via the cookie set during /send-otp.
+      await verifyOtp(enteredOtp)
+
       if (otpPurpose === 'otp-login') {
         const result = await otpLogin(cleaned)
         const redirectPath = await getRedirectPath(result.user)
@@ -320,7 +311,7 @@ function Login() {
         ? 'OTP verified. Set a new password.'
         : 'OTP verified. You can create a password or skip for now.')
     } catch (err) {
-      setError(err.message || 'OTP verification failed.')
+      setError(err.message || 'Invalid OTP. Please check and try again.')
     } finally {
       setIsLoading(false)
     }

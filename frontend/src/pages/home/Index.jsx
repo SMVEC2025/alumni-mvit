@@ -13,7 +13,7 @@ function Home() {
       <Hero />
       <AlumniCell />
       <FounderQuote />
-      <NotableAlumni />
+      {/* <NotableAlumni /> */}
       <EventsHighlight />
       <CtaSection />
     </div>
