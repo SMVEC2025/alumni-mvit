@@ -3,6 +3,18 @@ import { Link } from 'react-router-dom'
 function Hero() {
   return (
     <div className="hero-main">
+      <video
+        className="hero-bg-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/img/background/home-hero-test1.webp"
+        aria-hidden="true"
+      >
+        <source src="/video/herobg.webm" type="video/webm" />
+      </video>
       <div className="container hero-content">
         <div className="hero-title-block">
           <span className="hero-eyebrow">Welcome to</span>
