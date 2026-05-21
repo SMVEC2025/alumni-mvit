@@ -1,17 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useBlocker } from 'react-router-dom'
 import { HiUser, HiCamera, HiAcademicCap, HiLocationMarker, HiPlus, HiTrash } from 'react-icons/hi'
 import { useSnackbar } from 'notistack'
+import { Country, State, City } from 'country-state-city'
 import { getSupabaseWithSession, isSupabaseConfigured, supabase } from '../../lib/supabaseClient'
 import { verifySession } from '../../lib/auth'
 import { isStudentRegistered } from '../../lib/studentRegistration'
 import CustomSelect from '../../components/CustomSelect'
 import AutoSuggestInput from '../../components/AutoSuggestInput'
-import { companies, designations, industries, cities, states, countries } from '../../data/suggestions'
+import { companies, designations, industries } from '../../data/suggestions'
 import { safeSessionStorageSet } from '../../lib/safeStorage'
 import { uploadAlumniImage } from '../../lib/imageUpload'
 import { isValidLinkedInUrl, normalizeLinkedInUrl } from '../../lib/profileLinks'
 import companyFilterOptions from '../../../company-filter-options.json'
+
+const allCountriesData = Country.getAllCountries()
+const countryNameOptions = allCountriesData.map((c) => c.name)
 
 const emptyExperience = { company: '', designation: '', industry: '', experience: '', isStartup: false, startupName: '', startupType: '' }
 const EXPERIENCE_COLLAPSE_MS = 260
@@ -75,96 +79,25 @@ const isDuplicateIdentityError = (err) => {
 
 const departmentOptionsByDegree = {
   'B.Tech': [
-    'Electronics and Communication Engineering',
+    'Artificial Intelligence and Machine Learning',
+    'CSE – IoT and Cyber Security including Blockchain Technology',
+    'Computer Science & Engineering',
     'Electrical and Electronics Engineering',
-    'Computer science and Engineering',
+    'Electronics and Communication Engineering',
+    'Food Technology',
     'Information Technology',
     'Mechanical Engineering',
-    'Civil Engineering',
-    'Instrumentation and Control Engineering',
-    'Bio Medical Engineering',
-    'Mechatronics Engineering',
-    'Computer Science and Business Systems',
-    'Artificial intelligence and Data science',
-    'Computer and Communication Engineering',
+    'Robotics and Automation',
   ],
-  'B.Arch': ['Bachelor of Architecture'],
   'M.Tech': [
-    'Electronics and Communication Engineering',
-    'VLSI and Embedded Systems',
-    'Computer Science Engineering (Big data Analytics)',
-    'Artificial Intelligence and Data Science',
     'Computer Science & Engineering',
-    'Manufacturing Engineering',
+    'Electronics and Communication Engineering',
   ],
-  'MBA': ['Management Studies'],
-  'MCA': ['Computer Applications'],
-
-  "B.Sc (Arts & Science)": [
-    "Physics",
-    "Chemistry",
-    "Mathematics",
-    "Computer Science",
-    "Data Science And Analytics",
-    "Bio Technology",
-    "Microbiology",
-    "Nutrition And Dietetics",
-    "Visual Communication"
-  ],
-  "B.Com (Arts & Science)": [
-    "Professional Accounting",
-    "Cost And Management Accounting",
-    "General",
-    "Accounting And Finance",
-    "Corporate Secretaryship",
-    "Computer Applications"
-  ],
-  "BBA (Arts & Science)": [
-    "Bachelor Of Business Administration",
-    "Fintech And Digital Banking"
-  ],
-  "BCA (Arts & Science)": [
-    "Bachelor Of Computer Application"
-  ],
-  "B.A (Arts & Science)": [
-    "French",
-    "English",
-    "Tamil",
-    "Journalism & Mass Communication"
-  ],
-  "M.Sc (Arts & Science)": [
-    "Physics",
-    "Chemistry",
-    "Computer Science"
-  ],
-  "M.Com (Arts & Science)": [
-    "Master Of Commerce"
-  ],
-  "M.A (Arts & Science)": [
-    "English"
-  ],
-  "B.Sc (AHS)": [
-    "Cardiac Lab Technology",
-    "Radiography and Imaging Technology",
-    "Cardiac Perfusion Technology",
-    "Critical Care Technology",
-    "Emergency Medicine Technology",
-    "Optometry",
-    "Medical Lab Technology",
-    "Operation Theatre & Anesthesia Technology",
-    "Uro Care Technology",
-    "Neuro Care Technology",
-    "Reproductive Medicine & Clinical Embryology",
-    "Renal Dialysis Technology",
-    "Hematology & Blood Banking Technology",
-    "Respiratory Care Technology"
-  ],
-  "Diploma (AHS)": [
-    "Medical Lab Technology",
-    "Radiography and Imaging Technology",
-    "Operation Theatre & Anaesthesia Technology"
-  ]
-
+  'Ph.D': ['Electronics and Communication Engineering'],
+  'MBA': ['Master of Business Administration'],
+  'BBA': ['Bachelor of Business Administration'],
+  'MCA': ['Master of Computer Applications'],
+  'BCA': ['Bachelor of Computer Applications'],
 }
 const degrees = Object.keys(departmentOptionsByDegree)
 const completionYears = Array.from({ length: new Date().getFullYear() - 2011 + 1 }, (_, i) => String(new Date().getFullYear() - i))
@@ -305,6 +238,68 @@ function Registration() {
   }
 
   const availableDepartments = form.degree ? (departmentOptionsByDegree[form.degree] || []) : []
+
+  const selectedCountry = useMemo(
+    () => allCountriesData.find((c) => c.name === form.country) || null,
+    [form.country],
+  )
+
+  const stateOptionsForCountry = useMemo(() => {
+    if (!selectedCountry) return []
+    return State.getStatesOfCountry(selectedCountry.isoCode)
+  }, [selectedCountry])
+
+  const stateNameOptions = useMemo(
+    () => stateOptionsForCountry.map((s) => s.name),
+    [stateOptionsForCountry],
+  )
+
+  const selectedState = useMemo(() => {
+    if (!selectedCountry) return null
+    return stateOptionsForCountry.find((s) => s.name === form.state) || null
+  }, [selectedCountry, stateOptionsForCountry, form.state])
+
+  const cityNameOptions = useMemo(() => {
+    if (!selectedCountry || !selectedState) return []
+    return City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode).map((c) => c.name)
+  }, [selectedCountry, selectedState])
+
+  // Clear children only when the resolved parent truly changes — not during mid-typing
+  const lastResolvedCountryIsoRef = useRef(null)
+  useEffect(() => {
+    const currentIso = selectedCountry?.isoCode || null
+    const prevIso = lastResolvedCountryIsoRef.current
+    if (prevIso) {
+      const switchedCountry = currentIso && currentIso !== prevIso
+      const clearedCountry = !currentIso && form.country === ''
+      if (switchedCountry || clearedCountry) {
+        setForm((prev) => ({ ...prev, state: '', city: '' }))
+      }
+    }
+    if (currentIso) {
+      lastResolvedCountryIsoRef.current = currentIso
+    } else if (form.country === '') {
+      lastResolvedCountryIsoRef.current = null
+    }
+  }, [selectedCountry, form.country])
+
+  const lastResolvedStateIsoRef = useRef(null)
+  useEffect(() => {
+    const currentIso = selectedState?.isoCode || null
+    const prevIso = lastResolvedStateIsoRef.current
+    if (prevIso) {
+      const switchedState = currentIso && currentIso !== prevIso
+      const clearedState = !currentIso && form.state === ''
+      if (switchedState || clearedState) {
+        setForm((prev) => ({ ...prev, city: '' }))
+      }
+    }
+    if (currentIso) {
+      lastResolvedStateIsoRef.current = currentIso
+    } else if (form.state === '') {
+      lastResolvedStateIsoRef.current = null
+    }
+  }, [selectedState, form.state])
 
   const handleExperienceChange = (index, field, value) => {
     setIsDirty(true)
@@ -933,16 +928,17 @@ function Registration() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>City *</label>
+                    <label>Country *</label>
                     <AutoSuggestInput
-                      value={form.city}
+                      value={form.country}
                       onChange={(val) => {
                         setIsDirty(true)
-                        setForm((prev) => ({ ...prev, city: val }))
+                        setForm((prev) => ({ ...prev, country: val }))
                       }}
-                      suggestions={cities}
-                      placeholder="City"
+                      suggestions={countryNameOptions}
+                      placeholder="Country"
                       required
+                      strict
                     />
                   </div>
                   <div className="form-group">
@@ -951,27 +947,74 @@ function Registration() {
                       value={form.state}
                       onChange={(val) => {
                         setIsDirty(true)
+                        // First try matching against the current country's states (already handled
+                        // by AutoSuggestInput's strict-snap when the canonical name comes through).
+                        // Fall back to a global lookup so Chrome-autofilled state names from any
+                        // country snap correctly and auto-fill the parent country.
+                        const trimmed = String(val || '').trim()
+                        if (trimmed) {
+                          const inCurrent = stateOptionsForCountry.find(
+                            (s) => s.name.toLowerCase() === trimmed.toLowerCase(),
+                          )
+                          if (inCurrent) {
+                            setForm((prev) => ({ ...prev, state: inCurrent.name }))
+                            return
+                          }
+                          const globalMatch = State.getAllStates().find(
+                            (s) => s.name.toLowerCase() === trimmed.toLowerCase(),
+                          )
+                          if (globalMatch) {
+                            const matchedCountry = allCountriesData.find(
+                              (c) => c.isoCode === globalMatch.countryCode,
+                            )
+                            if (matchedCountry) {
+                              setForm((prev) => ({
+                                ...prev,
+                                country: matchedCountry.name,
+                                state: globalMatch.name,
+                              }))
+                              return
+                            }
+                          }
+                        }
                         setForm((prev) => ({ ...prev, state: val }))
                       }}
-                      suggestions={states}
-                      placeholder="State / Province"
+                      suggestions={stateNameOptions}
+                      placeholder={selectedCountry ? 'State / Province' : 'Select country first'}
                       required
+                      strict
+                      disabled={!selectedCountry}
                     />
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Country *</label>
+                    <label>City *</label>
                     <AutoSuggestInput
-                      value={form.country}
+                      value={form.city}
                       onChange={(val) => {
                         setIsDirty(true)
-                        setForm((prev) => ({ ...prev, country: val }))
+                        // Same defensive pattern as the state field — match cities globally and
+                        // auto-fill country/state when an autofill brings a recognized city name.
+                        const trimmed = String(val || '').trim()
+                        if (trimmed && selectedCountry && selectedState) {
+                          const inCurrent = City.getCitiesOfState(
+                            selectedCountry.isoCode,
+                            selectedState.isoCode,
+                          ).find((c) => c.name.toLowerCase() === trimmed.toLowerCase())
+                          if (inCurrent) {
+                            setForm((prev) => ({ ...prev, city: inCurrent.name }))
+                            return
+                          }
+                        }
+                        setForm((prev) => ({ ...prev, city: val }))
                       }}
-                      suggestions={countries}
-                      placeholder="Country"
+                      suggestions={cityNameOptions}
+                      placeholder={selectedState ? 'City' : 'Select state first'}
                       required
+                      strict
+                      disabled={!selectedState}
                     />
                   </div>
                   <div className="form-group">

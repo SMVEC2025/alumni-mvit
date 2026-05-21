@@ -29,95 +29,25 @@ const ALUMNI_SPACE_CACHE_TTL_MS = 2 * 60 * 1000
 
 const departmentOptionsByDegree = {
   'B.Tech': [
-    'Electronics and Communication Engineering',
+    'Artificial Intelligence and Machine Learning',
+    'CSE – IoT and Cyber Security including Blockchain Technology',
+    'Computer Science & Engineering',
     'Electrical and Electronics Engineering',
-    'Computer science and Engineering',
+    'Electronics and Communication Engineering',
+    'Food Technology',
     'Information Technology',
     'Mechanical Engineering',
-    'Civil Engineering',
-    'Instrumentation and Control Engineering',
-    'Bio Medical Engineering',
-    'Mechatronics Engineering',
-    'Computer Science and Business Systems',
-    'Artificial intelligence and Data science',
-    'Computer and Communication Engineering',
+    'Robotics and Automation',
   ],
-  'B.Arch': ['Bachelor of Architecture'],
   'M.Tech': [
-    'Electronics and Communication Engineering',
-    'VLSI and Embedded Systems',
-    'Computer Science Engineering (Big data Analytics)',
-    'Artificial Intelligence and Data Science',
     'Computer Science & Engineering',
-    'Manufacturing Engineering',
+    'Electronics and Communication Engineering',
   ],
-  'MBA': ['Management Studies'],
-  'MCA': ['Computer Applications'],
-
-  "B.Sc (Arts & Science)": [
-    "Physics",
-    "Chemistry",
-    "Mathematics",
-    "Computer Science",
-    "Data Science And Analytics",
-    "Bio Technology",
-    "Microbiology",
-    "Nutrition And Dietetics",
-    "Visual Communication"
-  ],
-  "B.Com (Arts & Science)": [
-    "Professional Accounting",
-    "Cost And Management Accounting",
-    "General",
-    "Accounting And Finance",
-    "Corporate Secretaryship",
-    "Computer Applications"
-  ],
-  "BBA (Arts & Science)": [
-    "Bachelor Of Business Administration",
-    "Fintech And Digital Banking"
-  ],
-  "BCA (Arts & Science)": [
-    "Bachelor Of Computer Application"
-  ],
-  "B.A (Arts & Science)": [
-    "French",
-    "English",
-    "Tamil",
-    "Journalism & Mass Communication"
-  ],
-  "M.Sc (Arts & Science)": [
-    "Physics",
-    "Chemistry",
-    "Computer Science"
-  ],
-  "M.Com (Arts & Science)": [
-    "Master Of Commerce"
-  ],
-  "M.A (Arts & Science)": [
-    "English"
-  ],
-  "B.Sc": [
-    "Cardiac Lab Technology",
-    "Radiography and Imaging Technology",
-    "Cardiac Perfusion Technology",
-    "Critical Care Technology",
-    "Emergency Medicine Technology",
-    "Optometry",
-    "Medical Lab Technology",
-    "Operation Theatre & Anesthesia Technology",
-    "Uro Care Technology",
-    "Neuro Care Technology",
-    "Reproductive Medicine & Clinical Embryology",
-    "Renal Dialysis Technology",
-    "Hematology & Blood Banking Technology",
-    "Respiratory Care Technology"
-  ],
-  "Diploma": [
-    "Medical Lab Technology",
-    "Radiography and Imaging Technology",
-    "Operation Theatre & Anaesthesia Technology"
-  ]
+  'Ph.D': ['Electronics and Communication Engineering'],
+  'MBA': ['Master of Business Administration'],
+  'BBA': ['Bachelor of Business Administration'],
+  'MCA': ['Master of Computer Applications'],
+  'BCA': ['Bachelor of Computer Applications'],
 }
 const degrees = Object.keys(departmentOptionsByDegree)
 

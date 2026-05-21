@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.97.0",
     "@zxing/browser": "^0.1.5",
     "axios": "^1.13.5",
+    "country-state-city": "^3.2.1",
     "framer-motion": "^12.34.3",
     "notistack": "^3.0.2",
     "react": "^19.2.0",

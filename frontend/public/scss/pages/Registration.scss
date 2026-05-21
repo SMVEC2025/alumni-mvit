@@ -473,6 +473,16 @@
 }
 
 // ── AutoSuggest Input ──
+@keyframes onAutoFillStart {
+  from { /**/ }
+  to { /**/ }
+}
+
+@keyframes onAutoFillCancel {
+  from { /**/ }
+  to { /**/ }
+}
+
 .autosuggest {
   position: relative;
 
@@ -489,6 +499,16 @@
     &:focus {
       border-color: $secondary-color;
       box-shadow: 0 0 0 3px rgba($secondary-color, 0.1);
+    }
+
+    &:-webkit-autofill {
+      animation-name: onAutoFillStart;
+      animation-duration: 1ms;
+    }
+
+    &:not(:-webkit-autofill) {
+      animation-name: onAutoFillCancel;
+      animation-duration: 1ms;
     }
   }
 

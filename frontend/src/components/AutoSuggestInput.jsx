@@ -11,12 +11,15 @@ function AutoSuggestInput({
   maxLength,
   required,
   name,
+  strict = false,
+  disabled = false,
 }) {
   const [filtered, setFiltered] = useState([])
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const wrapperRef = useRef(null)
   const listRef = useRef(null)
+  const justSelectedRef = useRef(false)
 
   const normalize = (s) => String(s).toLowerCase().trim()
 
@@ -31,10 +34,34 @@ function AutoSuggestInput({
 
   const handleInput = (e) => {
     const val = e.target.value
-    onChange(val)
     setFiltered(filter(val))
     setOpen(true)
     setActiveIndex(-1)
+
+    if (strict && val.trim()) {
+      const exact = suggestions.find((s) => {
+        const label = typeof s === 'string' ? s : s.label
+        return normalize(label) === normalize(val.trim())
+      })
+      if (exact) {
+        const canonical = typeof exact === 'string' ? exact : exact.label
+        onChange(canonical)
+        return
+      }
+    }
+
+    onChange(val)
+  }
+
+  // Detect Chrome's autofill — it writes input.value via DOM without firing onChange.
+  // A CSS keyframe targeting :-webkit-autofill fires onAnimationStart, which lets us
+  // reconcile React state with the DOM-injected value.
+  const handleAnimationStart = (e) => {
+    if (e.animationName !== 'onAutoFillStart') return
+    const domValue = e.target.value
+    if (domValue && domValue !== value) {
+      handleInput({ target: { value: domValue } })
+    }
   }
 
   const handleFocus = () => {
@@ -43,8 +70,38 @@ function AutoSuggestInput({
     if (showOnFocus || value.trim()) setOpen(true)
   }
 
+  const handleBlur = () => {
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false
+      return
+    }
+    if (!strict) return
+    const trimmed = String(value || '').trim()
+    if (!trimmed) return
+
+    const exact = suggestions.find((s) => {
+      const label = typeof s === 'string' ? s : s.label
+      return normalize(label) === normalize(trimmed)
+    })
+    if (exact) {
+      const canonical = typeof exact === 'string' ? exact : exact.label
+      if (canonical !== value) onChange(canonical)
+      return
+    }
+
+    const topMatch = filter(trimmed)[0]
+    if (topMatch) {
+      const canonical = typeof topMatch === 'string' ? topMatch : topMatch.label
+      onChange(canonical)
+      return
+    }
+
+    onChange('')
+  }
+
   const select = (item) => {
     const label = typeof item === 'string' ? item : item.label
+    justSelectedRef.current = true
     onChange(label)
     setOpen(false)
     setActiveIndex(-1)
@@ -62,6 +119,7 @@ function AutoSuggestInput({
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (activeIndex >= 0) select(filtered[activeIndex])
+      else if (strict && filtered.length > 0) select(filtered[0])
       else setOpen(false)
     } else if (e.key === 'Escape') {
       setOpen(false)
@@ -87,6 +145,7 @@ function AutoSuggestInput({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+
   return (
     <div className="autosuggest" ref={wrapperRef}>
       <input
@@ -94,15 +153,18 @@ function AutoSuggestInput({
         value={value}
         onChange={handleInput}
         onFocus={handleFocus}
+        onBlur={handleBlur}
         onKeyDown={handleKeyDown}
+        onAnimationStart={handleAnimationStart}
         placeholder={placeholder}
         inputMode={inputMode}
         maxLength={maxLength}
         required={required}
         name={name}
         autoComplete="off"
+        disabled={disabled}
       />
-      {open && filtered.length > 0 && (
+      {!disabled && open && filtered.length > 0 && (
         <ul className="autosuggest__list" ref={listRef}>
           {filtered.map((item, i) => {
             const label = typeof item === 'string' ? item : item.label
