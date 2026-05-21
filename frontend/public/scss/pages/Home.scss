@@ -165,7 +165,14 @@
     @media (max-width: 768px) {
       .hero-content {
         h1 {
-          font-size: 2.2rem;
+          // Fluid size so "Manakula Vinayagar" stays on a single line down to ~320px.
+          font-size: clamp(1.4rem, 7vw, 2.2rem);
+          white-space: nowrap;
+
+          .hero-title-suffix {
+            // Suffix wraps to its own line and can stay regular size.
+            white-space: normal;
+          }
         }
 
         .hero-stats {
