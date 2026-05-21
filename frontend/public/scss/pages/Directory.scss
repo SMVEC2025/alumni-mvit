@@ -929,6 +929,20 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    .dir-card-startup-tag {
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: $secondary-color;
+      background: rgba($secondary-color, 0.12);
+      border: 1px solid rgba($secondary-color, 0.25);
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 1.4;
+    }
   }
 
   .dir-card-dept {

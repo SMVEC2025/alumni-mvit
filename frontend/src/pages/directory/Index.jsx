@@ -939,10 +939,17 @@ function Directory() {
   const getCurrentRole = useCallback((row) => {
     if (Array.isArray(row.work_experiences) && row.work_experiences.length > 0) {
       const latest = row.work_experiences[0]
-      if (latest) return { company: latest.company || '', designation: latest.designation || '' }
+      if (latest?.is_startup) {
+        return {
+          company: latest.startup_name || '',
+          designation: latest.startup_type || '',
+          is_startup: true,
+        }
+      }
+      if (latest) return { company: latest.company || '', designation: latest.designation || '', is_startup: false }
     }
     if (row.company || row.designation) {
-      return { company: row.company || '', designation: row.designation || '' }
+      return { company: row.company || '', designation: row.designation || '', is_startup: false }
     }
     return null
   }, [])

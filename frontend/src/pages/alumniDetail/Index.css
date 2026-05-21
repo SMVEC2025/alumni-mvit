@@ -708,6 +708,26 @@
   font-weight: 600;
   margin: 0 0 2px;
   color: #222239;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.exp-startup-tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Futura PT', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #044d5a;
+  background: #d6f1f6;
+  border: 1px solid #b6e1ea;
+  border-radius: 999px;
+  padding: 2px 8px;
+  line-height: 1.4;
 }
 
 .exp-company {

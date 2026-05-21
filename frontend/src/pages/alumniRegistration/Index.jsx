@@ -13,7 +13,7 @@ import { uploadAlumniImage } from '../../lib/imageUpload'
 import { isValidLinkedInUrl, normalizeLinkedInUrl } from '../../lib/profileLinks'
 import companyFilterOptions from '../../../company-filter-options.json'
 
-const emptyExperience = { company: '', designation: '', industry: '', experience: '' }
+const emptyExperience = { company: '', designation: '', industry: '', experience: '', isStartup: false, startupName: '', startupType: '' }
 const EXPERIENCE_COLLAPSE_MS = 260
 const MAX_PROFILE_IMAGE_SIZE = 3 * 1024 * 1024
 const SUPPORTED_PROFILE_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
@@ -167,7 +167,7 @@ const departmentOptionsByDegree = {
 
 }
 const degrees = Object.keys(departmentOptionsByDegree)
-const completionYears = Array.from({ length: new Date().getFullYear() - 2000 + 1 }, (_, i) => String(new Date().getFullYear() - i))
+const completionYears = Array.from({ length: new Date().getFullYear() - 2011 + 1 }, (_, i) => String(new Date().getFullYear() - i))
 const companySuggestions = mergeCompanySuggestions(companies, companyFilterOptions.companies)
 
 function normalizeSuggestionLabel(value) {
@@ -413,13 +413,28 @@ function Registration() {
     const workExpPayload = skipEmployment
       ? null
       : workExperiences
-        .filter((w) => w.company.trim() || w.designation.trim())
-        .map((w) => ({
-          company: w.company.trim(),
-          designation: w.designation.trim(),
-          industry: w.industry.trim(),
-          experience: w.experience ? Number(w.experience) : null,
-        }))
+        .filter((w) => (w.isStartup ? w.startupName.trim() : (w.company.trim() || w.designation.trim())))
+        .map((w) => (
+          w.isStartup
+            ? {
+                is_startup: true,
+                startup_name: w.startupName.trim(),
+                startup_type: w.startupType.trim(),
+                company: null,
+                designation: null,
+                industry: null,
+                experience: null,
+              }
+            : {
+                is_startup: false,
+                company: w.company.trim(),
+                designation: w.designation.trim(),
+                industry: w.industry.trim(),
+                experience: w.experience ? Number(w.experience) : null,
+                startup_name: null,
+                startup_type: null,
+              }
+        ))
 
     const payload = {
       user_id: currentUser.id,
@@ -545,11 +560,15 @@ function Registration() {
       if (!form.department) return 'Please select a department.'
       if (!form.yearOfCompletion) return 'Year of completion is required.'
       if (!skipEmployment) {
-        const hasAtLeastOne = workExperiences.some((w) => w.company.trim())
+        const hasAtLeastOne = workExperiences.some((w) => w.company.trim() || (w.isStartup && w.startupName.trim()))
         if (!hasAtLeastOne) return 'Please add at least one work experience or check "Currently not working".'
         for (let i = 0; i < workExperiences.length; i++) {
           const w = workExperiences[i]
-          if (w.company.trim() && !w.designation.trim()) {
+          if (w.isStartup) {
+            if (!w.startupName.trim()) {
+              return `Business / startup name is required for experience #${i + 1}.`
+            }
+          } else if (w.company.trim() && !w.designation.trim()) {
             return `Designation is required for experience #${i + 1}.`
           }
         }
@@ -801,50 +820,84 @@ function Registration() {
                               )}
                             </div>
 
-                            <div className="form-row">
-                              <div className="form-group">
-                                <label>Company / Organization *</label>
-                                <AutoSuggestInput
-                                  value={exp.company}
-                                  onChange={(val) => handleExperienceChange(index, 'company', val)}
-                                  suggestions={companySuggestions}
-                                  placeholder="Current employer"
-                                  renderIcon
-                                />
-                              </div>
-                              <div className="form-group">
-                                <label>Designation *</label>
-                                <AutoSuggestInput
-                                  value={exp.designation}
-                                  onChange={(val) => handleExperienceChange(index, 'designation', val)}
-                                  suggestions={designations}
-                                  placeholder="Your job title"
-                                />
-                              </div>
-                            </div>
+                            <label className="startup-experience-check">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(exp.isStartup)}
+                                onChange={(e) => handleExperienceChange(index, 'isStartup', e.target.checked)}
+                              />
+                              <span>Startup / Own business</span>
+                            </label>
 
-                            <div className="form-row">
-                              <div className="form-group">
-                                <label>Industry</label>
-                                <AutoSuggestInput
-                                  value={exp.industry}
-                                  onChange={(val) => handleExperienceChange(index, 'industry', val)}
-                                  suggestions={industries}
-                                  placeholder="e.g. IT, Healthcare"
-                                  showOnFocus
-                                />
+                            {exp.isStartup ? (
+                              <div className="form-row">
+                                <div className="form-group">
+                                  <label>Business / Startup Name *</label>
+                                  <input
+                                    type="text"
+                                    value={exp.startupName}
+                                    onChange={(e) => handleExperienceChange(index, 'startupName', e.target.value)}
+                                    placeholder="Your business or startup name"
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Type of Business / Startup</label>
+                                  <input
+                                    type="text"
+                                    value={exp.startupType}
+                                    onChange={(e) => handleExperienceChange(index, 'startupType', e.target.value)}
+                                    placeholder="e.g. SaaS, D2C, Consulting"
+                                  />
+                                </div>
                               </div>
-                              <div className="form-group">
-                                <label>Years of Experience</label>
-                                <input
-                                  type="number"
-                                  value={exp.experience}
-                                  onChange={(e) => handleExperienceChange(index, 'experience', e.target.value)}
-                                  placeholder="e.g. 5"
-                                  min="0"
-                                />
-                              </div>
-                            </div>
+                            ) : (
+                              <>
+                                <div className="form-row">
+                                  <div className="form-group">
+                                    <label>Company / Organization *</label>
+                                    <AutoSuggestInput
+                                      value={exp.company}
+                                      onChange={(val) => handleExperienceChange(index, 'company', val)}
+                                      suggestions={companySuggestions}
+                                      placeholder="Current employer"
+                                      renderIcon
+                                    />
+                                  </div>
+                                  <div className="form-group">
+                                    <label>Designation *</label>
+                                    <AutoSuggestInput
+                                      value={exp.designation}
+                                      onChange={(val) => handleExperienceChange(index, 'designation', val)}
+                                      suggestions={designations}
+                                      placeholder="Your job title"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="form-row">
+                                  <div className="form-group">
+                                    <label>Industry</label>
+                                    <AutoSuggestInput
+                                      value={exp.industry}
+                                      onChange={(val) => handleExperienceChange(index, 'industry', val)}
+                                      suggestions={industries}
+                                      placeholder="e.g. IT, Healthcare"
+                                      showOnFocus
+                                    />
+                                  </div>
+                                  <div className="form-group">
+                                    <label>Years of Experience</label>
+                                    <input
+                                      type="number"
+                                      value={exp.experience}
+                                      onChange={(e) => handleExperienceChange(index, 'experience', e.target.value)}
+                                      placeholder="e.g. 5"
+                                      min="0"
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}

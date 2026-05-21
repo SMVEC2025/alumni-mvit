@@ -399,6 +399,11 @@ function AlumniDetail() {
 
         if (Array.isArray(alumni.work_experiences) && alumni.work_experiences.length > 0) {
             const latest = alumni.work_experiences[0]
+            if (latest.is_startup) {
+                const name = latest.startup_name || 'Own business'
+                const type = latest.startup_type ? ` | ${latest.startup_type}` : ''
+                return `Founder, ${name}${type}`
+            }
             if (latest.designation) {
                 const headline = latest.designation + (latest.company ? ` | ${latest.company}` : '')
                 return headline
@@ -562,16 +567,16 @@ function AlumniDetail() {
                                         </button>
                                     )}
                                     {statusError && <p className="profile-status-error">{statusError}</p>}
-                                    {job && job.company && (
+                                    {job && (job.is_startup ? job.startup_name : job.company) && (
                                         <div className="profile-org-item">
                                             <div className="org-logo org-logo--company">
                                                 <CompanyLogo
-                                                    company={job.company}
+                                                    company={job.is_startup ? job.startup_name : job.company}
                                                     className="company-logo-img"
                                                     fallback={<HiBriefcase />}
                                                 />
                                             </div>
-                                            <span>{job.company}</span>
+                                            <span>{job.is_startup ? job.startup_name : job.company}</span>
                                         </div>
                                     )}
                                     <div className="profile-org-item">
@@ -661,14 +666,23 @@ function AlumniDetail() {
                                     <div className="experience-item">
                                         <div className="exp-logo">
                                             <CompanyLogo
-                                                company={job.company}
+                                                company={job.is_startup ? job.startup_name : job.company}
                                                 className="company-logo-img company-logo-img--lg"
                                                 fallback={<HiOutlineOfficeBuilding />}
                                             />
                                         </div>
                                         <div className="exp-details">
-                                            <h4>{job.designation || 'Role not specified'}</h4>
-                                            <p className="exp-company">{job.company || 'Company not specified'}</p>
+                                            <h4>
+                                                {job.is_startup
+                                                    ? (job.startup_name || 'Own business')
+                                                    : (job.designation || 'Role not specified')}
+                                                {job.is_startup && <span className="exp-startup-tag">Startup / Own Business</span>}
+                                            </h4>
+                                            <p className="exp-company">
+                                                {job.is_startup
+                                                    ? (job.startup_type ? `Type: ${job.startup_type}` : 'Founder')
+                                                    : (job.company || 'Company not specified')}
+                                            </p>
                                             {(job.from_year || job.to_year) && (
                                                 <p className="exp-dates">
                                                     {job.from_year || ''} - {job.to_year || 'Present'}
@@ -682,14 +696,23 @@ function AlumniDetail() {
                                         <div className="experience-item" key={idx}>
                                             <div className="exp-logo">
                                                 <CompanyLogo
-                                                    company={prevJob.company}
+                                                    company={prevJob.is_startup ? prevJob.startup_name : prevJob.company}
                                                     className="company-logo-img company-logo-img--lg"
                                                     fallback={<HiOutlineOfficeBuilding />}
                                                 />
                                             </div>
                                             <div className="exp-details">
-                                                <h4>{prevJob.designation || 'Role not specified'}</h4>
-                                                <p className="exp-company">{prevJob.company || 'Company not specified'}</p>
+                                                <h4>
+                                                    {prevJob.is_startup
+                                                        ? (prevJob.startup_name || 'Own business')
+                                                        : (prevJob.designation || 'Role not specified')}
+                                                    {prevJob.is_startup && <span className="exp-startup-tag">Startup / Own Business</span>}
+                                                </h4>
+                                                <p className="exp-company">
+                                                    {prevJob.is_startup
+                                                        ? (prevJob.startup_type ? `Type: ${prevJob.startup_type}` : 'Founder')
+                                                        : (prevJob.company || 'Company not specified')}
+                                                </p>
                                                 {(prevJob.from_year || prevJob.to_year) && (
                                                     <p className="exp-dates">
                                                         {prevJob.from_year || ''} - {prevJob.to_year || 'Present'}
