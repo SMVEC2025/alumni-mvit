@@ -55,14 +55,19 @@
     }
   }
 
-  // ── Login page: split — transparent over brand panel, white over form panel
+  // ── Login page: transparent navbar (logo only)
   &.navbar--login {
-    background: linear-gradient(to right, transparent 55%, #ffffff 45%);
+    background: transparent;
     box-shadow: none;
 
-    // Hide logo on the login page — brand identity is already in the brand panel.
-    .navbar-logo {
-      display: none;
+    .navbar-logo .logo-text {
+      h1 {
+        color: $secondary-color;
+      }
+
+      span {
+        color: $text-light;
+      }
     }
 
     .navbar-links a {
@@ -83,20 +88,6 @@
         background-color: #054d5a;
         color: #fff;
         border-color: #054d5a;
-      }
-    }
-
-    @media (max-width: 900px) {
-      background: linear-gradient(to right, transparent 40%, #ffffff 40%);
-    }
-
-    @media (max-width: 680px) {
-      background: #242987;
-      backdrop-filter: none;
-      box-shadow: none;
-
-      .navbar-toggle {
-        color: #ffffff;
       }
     }
   }
