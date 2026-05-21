@@ -150,7 +150,7 @@ export async function sendOtp(mobileNumber) {
     throw new Error('Enter a valid 10-digit mobile number.')
   }
 
-  return callOtpApi('/send-otp', { mobile_number: cleaned })
+  return callOtpApi('/send-otp', { mobile_number: cleaned, college: 'mvit' })
 }
 
 export async function verifyOtp(otp) {
@@ -167,6 +167,7 @@ export async function checkMobileStatus(mobileNumber) {
   return callEdgeFn({
     action: 'check-mobile-status',
     mobile_number: cleaned,
+    college: 'mvit',
   })
 }
 
@@ -175,6 +176,7 @@ export async function login(mobileNumber, password) {
   const data = await callEdgeFn({
     action: 'login',
     mobile_number: cleaned,
+    college: 'mvit',
     password,
   })
   saveSession(data.session_token, data.user)
@@ -186,6 +188,7 @@ export async function otpLogin(mobileNumber) {
   const data = await callEdgeFn({
     action: 'otp-login',
     mobile_number: cleaned,
+    college: 'mvit',
   })
   saveSession(data.session_token, data.user)
   return data
@@ -196,6 +199,7 @@ export async function setPassword(mobileNumber, password) {
   const data = await callEdgeFn({
     action: 'set-password',
     mobile_number: cleaned,
+    college: 'mvit',
     password,
   })
   saveSession(data.session_token, data.user)
