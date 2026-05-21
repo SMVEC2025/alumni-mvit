@@ -411,7 +411,7 @@ function Navbar({
           onLogout={handleLogout}
           loggingOut={loggingOut}
           profilePath={isStaff ? '/directory' : '/alumni-space'}
-          logoSrc="/img/logo/dark.svg"
+          logoSrc="/img/logo/mvit-logo-darkk.png"
         />
       </>
     )
@@ -423,7 +423,7 @@ function Navbar({
         <div className="containerr navbar-inner">
           <Link to="/" className="navbar-logo">
             <img
-              src={scrolled && !isLoginPage ? '/img/logo/mvit_light.svg' : '/img/logo/MVIT-logo60.png'}
+              src={scrolled && !isLoginPage ? '/img/logo/mvit-logo-light.png' : '/img/logo/mvit-logo-darkk.png'}
               alt="MVIT Alumni"
               className="navbar-logo-img"
             />
@@ -488,7 +488,7 @@ function Navbar({
         onLogout={handleLogout}
         loggingOut={loggingOut}
         profilePath={isStaff ? '/directory' : '/alumni-space'}
-        logoSrc="/img/logo/dark.svg"
+        logoSrc="/img/logo/mvit-logo-darkk.png"
       />
     </>
   )

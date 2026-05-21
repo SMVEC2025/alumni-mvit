@@ -477,22 +477,6 @@
   max-width: 220px;
 }
 
-@keyframes profile-inline-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.profile-inline-spinner {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid rgba(31, 41, 55, 0.28);
-  border-top-color: #1f2937;
-  animation: profile-inline-spin 0.7s linear infinite;
-  flex-shrink: 0;
-}
-
 .profile-org-item {
   display: flex;
   align-items: center;

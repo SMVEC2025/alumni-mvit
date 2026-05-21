@@ -96,7 +96,7 @@ function Contact() {
                   <div className="info-icon"><HiPhone /></div>
                   <div className="info-text">
                     <h4>Phone</h4>
-                    <p>+91 413 2516 789</p>
+                    <p>+91 6385155814</p>
                   </div>
                 </div>
 
@@ -112,7 +112,7 @@ function Contact() {
                   <div className="info-icon"><HiClock /></div>
                   <div className="info-text">
                     <h4>Office Hours</h4>
-                    <p>Mon - Fri: 9:00 AM - 5:00 PM<br />Sat: 9:00 AM - 1:00 PM</p>
+                    <p>Mon - sat: 9:00 AM - 5:00 PM</p>
                   </div>
                 </div>
               </div>

@@ -13,7 +13,7 @@ function MobileSidebarMenu({
   onLogout,
   loggingOut = false,
   profilePath = '/alumni-space',
-  logoSrc = '/img/logo/dark.svg',
+  logoSrc = '/img/logo/mvit-logo-darkk.png',
 }) {
   return (
     <>

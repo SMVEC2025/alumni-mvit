@@ -39,11 +39,11 @@ function Hero() {
             <p>Alumni Members</p>
           </div>
           <div className="stat">
-            <h3>26+</h3>
+            <h3>18+</h3>
             <p>Years of Legacy</p>
           </div>
           <div className="stat">
-            <h3>55+</h3>
+            <h3>15+</h3>
             <p>Courses</p>
           </div>
         </div>

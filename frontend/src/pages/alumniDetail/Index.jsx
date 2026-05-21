@@ -555,10 +555,7 @@ function AlumniDetail() {
                                             disabled={statusMutating}
                                         >
                                             {statusMutating ? (
-                                                <>
-                                                    <span className="profile-inline-spinner" aria-hidden="true" />
-                                                    {alumni.is_disabled === true ? 'Enabling...' : 'Disabling...'}
-                                                </>
+                                                alumni.is_disabled === true ? 'Enabling...' : 'Disabling...'
                                             ) : (
                                                 alumni.is_disabled === true ? 'Enable Alumni' : 'Disable Alumni'
                                             )}

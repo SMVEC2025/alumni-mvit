@@ -567,7 +567,7 @@ function AlumniSpace() {
   if (isLoading) {
     return (
       <div className="alumni-space-loading">
-        <div className="alumni-loading-spinner" />
+        <div className="alumni-loading-spinner" aria-hidden="true" />
       </div>
     )
   }

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { HiMail, HiPhone, HiLocationMarker } from 'react-icons/hi'
-import { FaFacebook, FaInstagram, FaWhatsapp, FaYoutube } from 'react-icons/fa'
+import { FaInstagram, FaWhatsapp, FaYoutube, FaXTwitter } from 'react-icons/fa6'
 
 function Footer() {
   return (
@@ -8,16 +8,16 @@ function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <img src="/img/logo/dark.svg" alt="MVIT Alumni" className="footer-logo-img" />
+            <img src="/img/logo/mvit-logo-darkk.png" alt="MVIT Alumni" className="footer-logo-img" />
             <p>
               Connecting graduates across the globe. Stay in touch with your alma mater
               and fellow alumni through our vibrant network.
             </p>
             <div className="footer-social">
-              <a href="https://www.facebook.com/SMVECOfficial" target="_blank" rel="noreferrer" aria-label="SMVEC Facebook"><FaFacebook /></a>
-              <a href="https://www.youtube.com/@official_smvec" target="_blank" rel="noreferrer" aria-label="SMVEC YouTube"><FaYoutube /></a>
-              <a href="https://api.whatsapp.com/send/?phone=916385155814&text&app_absent=0" target="_blank" rel="noreferrer" aria-label="SMVEC WhatsApp"><FaWhatsapp /></a>
-              <a href="https://www.instagram.com/smvec_official" target="_blank" rel="noreferrer" aria-label="SMVEC Instagram"><FaInstagram /></a>
+              <a href="https://www.instagram.com/mvit_pondicherry" target="_blank" rel="noreferrer" aria-label="MVIT Instagram"><FaInstagram /></a>
+              <a href="https://api.whatsapp.com/send/?phone=916385155814&text&app_absent=0" target="_blank" rel="noreferrer" aria-label="MVIT WhatsApp"><FaWhatsapp /></a>
+              <a href="https://www.youtube.com/channel/UC_0L7LogSrIZdMHor7h1prw/videos" target="_blank" rel="noreferrer" aria-label="MVIT YouTube"><FaYoutube /></a>
+              <a href="https://x.com/mvitpondicherry" target="_blank" rel="noreferrer" aria-label="MVIT X"><FaXTwitter /></a>
             </div>
           </div>
 
@@ -47,7 +47,7 @@ function Footer() {
             </div>
             <div className="footer-contact-item">
               <HiPhone />
-              <span>+91 413 2516 789</span>
+              <span>+91 6385155814</span>
             </div>
             <div className="footer-contact-item">
               <HiMail />

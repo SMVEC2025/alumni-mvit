@@ -1669,10 +1669,7 @@ function PersonCard({
             }}
           >
             {isToggling ? (
-              <>
-                <span className="dir-inline-spinner" aria-hidden="true" />
-                {/* {isDisabled ? 'Enabling...' : 'Disabling...'} */}
-              </>
+              isDisabled ? 'Enabling...' : 'Disabling...'
             ) : (
               isDisabled ? 'Enable' : 'Disable'
             )}
@@ -1748,10 +1745,7 @@ function PersonRow({
             }}
           >
             {isToggling ? (
-              <>
-                <span className="dir-inline-spinner" aria-hidden="true" />
-                {isDisabled ? 'Enabling...' : 'Disabling...'}
-              </>
+              isDisabled ? 'Enabling...' : 'Disabling...'
             ) : (
               isDisabled ? 'Enable' : 'Disable'
             )}

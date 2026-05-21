@@ -488,8 +488,7 @@ function Login() {
 
             {isBusy ? (
               <div className="auth-common-loader">
-                <div className="auth-common-spinner" />
-                {/* <p>Please wait...</p> */}
+                <div className="auth-common-spinner" aria-hidden="true" />
               </div>
             ) : (
               <>

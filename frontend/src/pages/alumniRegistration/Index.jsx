@@ -575,7 +575,7 @@ function Registration() {
   if (isChecking) {
     return (
       <div className="reg-page-loading">
-        <div className="reg-page-spinner" />
+        <div className="reg-page-spinner" aria-hidden="true" />
       </div>
     )
   }

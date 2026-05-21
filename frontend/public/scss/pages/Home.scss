@@ -319,15 +319,15 @@
   .founder-quote-inner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 40px;
+    padding: 0 32px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: 80px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+    align-items: start;
+    gap: 64px;
 
     @media (max-width: 900px) {
       grid-template-columns: 1fr;
-      gap: 50px;
+      gap: 42px;
       padding: 0 24px;
     }
   }
@@ -336,30 +336,28 @@
   .founder-quote-left {
     position: relative;
     padding-left: 12px;
+    max-width: 620px;
   }
 
-  .founder-quote-ornament {
-    display: block;
-    font-family: 'Arno Pro Display', Georgia, serif;
-    font-size: 8rem;
-    line-height: 0.6;
-    color: $primary-color;
-    opacity: 0.25;
-    margin-bottom: 8px;
-    user-select: none;
+  .founder-quote-kicker {
+    margin: 0 0 18px;
+    font-family: 'Futura PT', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: $secondary-color;
   }
 
-  .founder-quote-text {
+  .founder-quote-heading {
     font-family: 'Arno Pro Display', Georgia, serif;
-    font-size: 1.85rem;
+    font-size: 1.92rem;
     font-weight: 400;
     color: $text-dark;
-    line-height: 1.55;
-    font-style: italic;
-    margin: 0 0 32px;
+    line-height: 1.35;
+    margin: 0 0 22px;
     position: relative;
 
-    // Subtle left accent bar
     &::before {
       content: '';
       position: absolute;
@@ -372,7 +370,57 @@
     }
 
     @media (max-width: 600px) {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
+    }
+  }
+
+  .founder-quote-text {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 22px;
+
+    p {
+      margin: 0;
+      font-family: 'Futura PT', sans-serif;
+      font-size: 0.98rem;
+      line-height: 1.7;
+      color: $text-light;
+    }
+  }
+
+  .founder-quote-highlights {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+    margin: 0 0 24px;
+    padding: 0;
+
+    li {
+      position: relative;
+      padding: 12px 14px 12px 36px;
+      border: 1px solid rgba($secondary-color, 0.08);
+      background: rgba(#fff, 0.72);
+      font-family: 'Futura PT', sans-serif;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: $text-dark;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 18px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary-color, lighten($primary-color, 12%));
+        box-shadow: 0 0 0 4px rgba($primary-color, 0.12);
+      }
+    }
+
+    @media (max-width: 700px) {
+      grid-template-columns: 1fr;
     }
   }
 
@@ -396,10 +444,11 @@
 
     .founder-title {
       font-family: 'Futura PT', sans-serif;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 400;
       color: $text-light;
       letter-spacing: 1px;
+      line-height: 1.5;
       text-transform: uppercase;
     }
   }
@@ -407,13 +456,14 @@
   // ── Right: Image ───────────────────────────────────────────────────────
   .founder-quote-right {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
   }
 
   .founder-img-frame {
     position: relative;
     width: 100%;
-    max-width: 420px;
+    max-width: 460px;
+    margin-left: auto;
 
     // border: 1px solid rgba($primary-color, 0.35);
     // Gold decorative border offset
@@ -977,81 +1027,5 @@
       background: rgba(#fff, 0.1);
       transform: translateY(-2px);
     }
-  }
-}
-
-
-.logo-entrance {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 1500;
-  background-color: rgb(255, 255, 255);
-  width: 100%;
-  height: 100vh;
-  justify-content: center;
-  align-items: center;
-  display: flex;
-
-  svg {
-    position: absolute;
-    top: 50vh;
-    left: 50vw;
-    transform: translate(-50%, -50%);
-  }
-}
-
-.logo-entrance.show {
-  background-color: rgba(255, 255, 255, 0.986);
-  backdrop-filter: blur(100px);
-}
-
-.logo-entrance.hide {
-  animation: hideHeight 0.5s forwards ease-out;
-
-  svg {
-    scale: 1;
-    animation: moveLogo 1s forwards ease-out;
-  }
-}
-
-
-.preloader-main {
-  width: 100%;
-  height: 100vh;
-  background-color: rgb(255, 255, 255);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999999;
-  animation: animationstart 1.5s ease-in-out forwards;
-}
-
-@keyframes animationstart {
-  0% {
-    background-color: white;
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  65% {
-    background-color: white;
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  85% {
-    background-color: rgba(255, 255, 255, 0.5);
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  100% {
-    background-color: rgba(255, 255, 255, 0);
-    opacity: 0;
-    pointer-events: none;
   }
 }
